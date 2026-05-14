@@ -8,9 +8,9 @@ It does not replace Claude, Codex, ChatGPT, Copilot Chat, or any other AI coding
 
 ## Status
 
-NAssistant is in the early design stage.
+NAssistant has an initial VS Code extension scaffold.
 
-This repository currently documents the product direction and intended behavior. Implementation details will be added as the VS Code extension is built.
+The extension does not include user-facing commands yet. The current codebase only prepares the TypeScript, npm, and VS Code development structure for future features.
 
 ## Installation
 
@@ -155,15 +155,25 @@ If the answer is no, the feature probably does not belong in NAssistant.
 
 ## Development
 
-Development setup will be documented once the extension scaffold is added.
+Install dependencies:
 
-Expected future documentation:
+```sh
+npm install
+```
 
-- Required Node.js version
-- Install command
-- Local extension launch instructions
-- Test command
-- Packaging command
+Compile the extension:
+
+```sh
+npm run compile
+```
+
+Run the extension locally:
+
+1. Open this repository in VS Code.
+2. Run the `Run Extension` debug configuration.
+3. VS Code will open an Extension Development Host window.
+
+The current extension has no commands or visible behavior. That is intentional until the first real NAssistant feature is added.
 
 ## Contributing
 
