@@ -10,7 +10,7 @@ It does not replace Claude, Codex, ChatGPT, Copilot Chat, or any other AI coding
 
 NAssistant has an initial VS Code extension scaffold.
 
-The extension does not include user-facing commands yet. The current codebase only prepares the TypeScript, npm, and VS Code development structure for future features.
+The extension includes a lightweight Activity Bar entry for NAssistant, but it does not include user-facing commands yet. The current codebase only prepares the TypeScript, npm, and VS Code development structure for future features.
 
 ## Installation
 
@@ -173,7 +173,7 @@ Run the extension locally:
 2. Run the `Run Extension` debug configuration.
 3. VS Code will open an Extension Development Host window.
 
-The current extension has no commands or visible behavior. That is intentional until the first real NAssistant feature is added.
+The current extension has an Activity Bar entry, but no commands or functional behavior. That is intentional until the first real NAssistant feature is added.
 
 ## Contributing
 

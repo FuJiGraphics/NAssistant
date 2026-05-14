@@ -2,7 +2,7 @@
   "name": "nassistant",
   "displayName": "NAssistant",
   "description": "AI-neutral context helper for VS Code.",
-  "version": "0.0.1",
+  "version": "0.0.4",
   "publisher": "fujigraphics",
   "license": "UNLICENSED",
   "engines": {
@@ -11,6 +11,28 @@
   "categories": [
     "Other"
   ],
+  "activationEvents": [
+    "onView:nassistant.sidebar"
+  ],
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "nassistant",
+          "title": "NAssistant",
+          "icon": "media/nassistant.svg"
+        }
+      ]
+    },
+    "views": {
+      "nassistant": [
+        {
+          "id": "nassistant.sidebar",
+          "name": "NAssistant"
+        }
+      ]
+    }
+  },
   "main": "./out/extension.js",
   "scripts": {
     "vscode:prepublish": "npm run compile",

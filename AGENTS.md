@@ -21,6 +21,7 @@ NAssistant는 VS Code 확장입니다. 목표는 Claude, Codex, ChatGPT, Copilot
 - TypeScript
 - npm
 - 사용자에게 보이는 실제 기능이 생기기 전까지는 명령을 추가하지 않는다.
+- Activity Bar에는 NAssistant 진입점이 있을 수 있지만, 실제 기능 없이 무거운 UI를 만들지 않는다.
 
 ## 좋은 기능의 기준
 
