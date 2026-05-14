@@ -20,8 +20,13 @@ NAssistant는 VS Code 확장입니다. 목표는 Claude, Codex, ChatGPT, Copilot
 - VS Code extension
 - TypeScript
 - npm
-- 사용자에게 보이는 실제 기능이 생기기 전까지는 명령을 추가하지 않는다.
+- 명령은 실제 사용자 기능이 있을 때만 추가한다.
 - Activity Bar에는 NAssistant 진입점이 있을 수 있지만, 실제 기능 없이 무거운 UI를 만들지 않는다.
+- 기본 `Ctrl+C`/`Command+C`는 오버라이드하지 않는다.
+- AI용 위치 복사는 명시적 명령/단축키인 `Ctrl+Shift+C`/`Command+Shift+C`로만 제공한다.
+- AI용 위치 복사는 코드 본문을 복사하지 않고 `[location: path:start-end]`만 클립보드에 넣는다.
+- Explorer 파일 참조 복사도 `Ctrl+Shift+C`/`Command+Shift+C`를 사용하되 파일 본문이나 첨부가 아니라 `[file: path]` 참조만 복사한다.
+- 붙여넣기 대상이 챗봇인지 일반 에디터인지 안정적으로 판별할 수 있다고 가정하지 않는다.
 
 ## 좋은 기능의 기준
 

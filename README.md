@@ -8,9 +8,9 @@ It does not replace Claude, Codex, ChatGPT, Copilot Chat, or any other AI coding
 
 ## Status
 
-NAssistant has an initial VS Code extension scaffold.
+NAssistant has an initial VS Code extension with focused context-copying features.
 
-The extension includes a lightweight Activity Bar entry for NAssistant, but it does not include user-facing commands yet. The current codebase only prepares the TypeScript, npm, and VS Code development structure for future features.
+The extension includes a lightweight Activity Bar entry, a selection location copy command, and a file reference copy command.
 
 ## Installation
 
@@ -43,38 +43,41 @@ Core principles:
 - AI-neutral: no dependency on a specific model, provider, API, or chat UI.
 - Clipboard-first: work with the tools and AI surfaces users already have.
 - Low interruption: prefer commands, shortcuts, context menus, and status feedback.
-- Precise context: preserve file paths, line ranges, language IDs, and selected code.
+- Precise context: preserve file paths and line ranges without copying unnecessary code.
 - Small surface area: ship a few sharp features instead of many shallow ones.
 - Safety by default: make copied scope visible and reduce accidental over-copying.
 
-## Planned Features
+## Features
 
-### Copy Selection as AI Context
+### Copy Selection Location for AI
 
-Copy the current selection with file metadata and a fenced code block.
+Normal copy is untouched. `Command+C` on macOS and `Ctrl+C` on Windows/Linux still copy the selected source code exactly as VS Code normally would.
 
-Planned output:
+When code is selected in the editor, `Command+Shift+C` on macOS or `Ctrl+Shift+C` on Windows/Linux copies only the selection location as AI-ready context.
 
-````text
-File: src/example.ts
-Lines: 12-38
+Output:
 
-```ts
-export function example() {
-  // selected code
-}
+```text
+[location: src/example.ts:12-38]
 ```
-````
+
+The selected source code is not copied by the AI location command. This avoids changing normal paste behavior in editors, documents, terminals, or other non-chat surfaces.
 
 ### Copy File Reference
 
-Copy a compact reference to the current file or selected range.
+Normal copy is still untouched in the File Explorer. NAssistant does not put file bytes on the system clipboard or pretend to attach files to external AI tools.
 
-Example:
+When a file is selected in the VS Code Explorer, `Command+Shift+C` on macOS or `Ctrl+Shift+C` on Windows/Linux copies a compact AI-ready file reference.
+
+Output:
 
 ```text
-src/example.ts:12-38
+[file: src/example.ts]
 ```
+
+The command is also available from the Explorer context menu.
+
+## Planned Features
 
 ### Copy Open Editors Context
 
@@ -118,8 +121,10 @@ Planned entry points:
 The default flow should be simple:
 
 1. Select code in VS Code.
-2. Run an NAssistant copy command.
+2. Press `Command+Shift+C` on macOS or `Ctrl+Shift+C` on Windows/Linux.
 3. Paste the prepared context into any AI tool.
+
+For file-level context, select a file in the Explorer and use the same shortcut.
 
 ## Non-Goals
 
@@ -173,7 +178,7 @@ Run the extension locally:
 2. Run the `Run Extension` debug configuration.
 3. VS Code will open an Extension Development Host window.
 
-The current extension has an Activity Bar entry, but no commands or functional behavior. That is intentional until the first real NAssistant feature is added.
+The current extension has an Activity Bar entry, a selection-aware copy command, and an Explorer file reference copy command.
 
 ## Contributing
 

@@ -2,7 +2,7 @@
   "name": "nassistant",
   "displayName": "NAssistant",
   "description": "AI-neutral context helper for VS Code.",
-  "version": "0.0.4",
+  "version": "0.2.2",
   "publisher": "fujigraphics",
   "license": "UNLICENSED",
   "engines": {
@@ -12,9 +12,51 @@
     "Other"
   ],
   "activationEvents": [
+    "onCommand:nassistant.copyFileReferenceForAi",
+    "onCommand:nassistant.copySelectionAsAiContext",
     "onView:nassistant.sidebar"
   ],
   "contributes": {
+    "commands": [
+      {
+        "command": "nassistant.copyFileReferenceForAi",
+        "title": "NAssistant: Copy File Reference for AI"
+      },
+      {
+        "command": "nassistant.copySelectionAsAiContext",
+        "title": "NAssistant: Copy Selection Location for AI"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "nassistant.copySelectionAsAiContext",
+        "key": "ctrl+shift+c",
+        "mac": "cmd+shift+c",
+        "when": "editorTextFocus && editorHasSelection"
+      },
+      {
+        "command": "nassistant.copyFileReferenceForAi",
+        "key": "ctrl+shift+c",
+        "mac": "cmd+shift+c",
+        "when": "filesExplorerFocus && resourceSet && !explorerResourceIsFolder"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "nassistant.copySelectionAsAiContext",
+          "when": "editorTextFocus && editorHasSelection",
+          "group": "navigation"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "nassistant.copyFileReferenceForAi",
+          "when": "resourceSet && !explorerResourceIsFolder",
+          "group": "navigation"
+        }
+      ]
+    },
     "viewsContainers": {
       "activitybar": [
         {
