@@ -5,6 +5,10 @@
   "version": "0.2.2",
   "publisher": "fujigraphics",
   "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FuJiGraphics/NAssistant.git"
+  },
   "engines": {
     "vscode": "^1.90.0"
   },
