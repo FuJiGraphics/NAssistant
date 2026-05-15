@@ -12,6 +12,7 @@
     "Other"
   ],
   "activationEvents": [
+    "onCommand:nassistant.openSettings",
     "onCommand:nassistant.copyFileReferenceForAi",
     "onCommand:nassistant.copySelectionAsAiContext",
     "onView:nassistant.sidebar"
@@ -25,6 +26,10 @@
       {
         "command": "nassistant.copySelectionAsAiContext",
         "title": "NAssistant: Copy Selection Location for AI"
+      },
+      {
+        "command": "nassistant.openSettings",
+        "title": "NAssistant: Open Settings"
       }
     ],
     "keybindings": [
@@ -32,30 +37,45 @@
         "command": "nassistant.copySelectionAsAiContext",
         "key": "ctrl+shift+c",
         "mac": "cmd+shift+c",
-        "when": "editorTextFocus && editorHasSelection"
+        "when": "editorTextFocus && editorHasSelection && config.nassistant.features.copySelectionLocation.enabled"
       },
       {
         "command": "nassistant.copyFileReferenceForAi",
         "key": "ctrl+shift+c",
         "mac": "cmd+shift+c",
-        "when": "filesExplorerFocus && resourceSet && !explorerResourceIsFolder"
+        "when": "filesExplorerFocus && resourceSet && !explorerResourceIsFolder && config.nassistant.features.copyFileReference.enabled"
       }
     ],
     "menus": {
       "editor/context": [
         {
           "command": "nassistant.copySelectionAsAiContext",
-          "when": "editorTextFocus && editorHasSelection",
+          "when": "editorTextFocus && editorHasSelection && config.nassistant.features.copySelectionLocation.enabled",
           "group": "navigation"
         }
       ],
       "explorer/context": [
         {
           "command": "nassistant.copyFileReferenceForAi",
-          "when": "resourceSet && !explorerResourceIsFolder",
+          "when": "resourceSet && !explorerResourceIsFolder && config.nassistant.features.copyFileReference.enabled",
           "group": "navigation"
         }
       ]
+    },
+    "configuration": {
+      "title": "NAssistant",
+      "properties": {
+        "nassistant.features.copySelectionLocation.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable the command that copies the active editor selection as an AI-ready location reference."
+        },
+        "nassistant.features.copyFileReference.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable the command that copies selected Explorer files as AI-ready file references."
+        }
+      }
     },
     "viewsContainers": {
       "activitybar": [
@@ -69,6 +89,7 @@
     "views": {
       "nassistant": [
         {
+          "type": "webview",
           "id": "nassistant.sidebar",
           "name": "NAssistant"
         }
