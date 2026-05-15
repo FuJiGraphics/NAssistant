@@ -22,6 +22,26 @@ export const FEATURE_DEFINITIONS = [
     shortcut: 'Ctrl+Shift+C',
     macShortcut: 'Cmd+Shift+C',
     preview: '[file: src/example.ts]'
+  },
+  {
+    id: 'pasteContextToAssistant',
+    setting: 'features.pasteContextToAssistant.enabled',
+    command: COMMANDS.pasteContextToAssistant,
+    title: 'Paste Context to Assistant',
+    context: 'Editor selection or Explorer file',
+    shortcut: 'Ctrl+Shift+V',
+    macShortcut: 'Cmd+Shift+V',
+    preview: 'Assistant input <- [location: src/example.ts:12-38]',
+    additionalCommands: [
+      {
+        label: 'Claude',
+        command: COMMANDS.pasteContextToClaude
+      },
+      {
+        label: 'Codex',
+        command: COMMANDS.pasteContextToCodex
+      }
+    ]
   }
 ] as const;
 
@@ -33,10 +53,16 @@ export interface FeatureState {
   title: string;
   context: string;
   command: string;
+  commandIds: FeatureCommandState[];
   shortcut: string;
   macShortcut: string;
   preview: string;
   enabled: boolean;
+}
+
+export interface FeatureCommandState {
+  label: string;
+  command: string;
 }
 
 export interface SettingsState {
@@ -50,6 +76,7 @@ export function getSettingsState(): SettingsState {
       title: feature.title,
       context: feature.context,
       command: feature.command,
+      commandIds: getFeatureCommandIds(feature),
       shortcut: feature.shortcut,
       macShortcut: feature.macShortcut,
       preview: feature.preview,
@@ -74,4 +101,14 @@ export function isFeatureId(value: unknown): value is FeatureId {
 
 function getBooleanSetting(setting: string, fallback: boolean): boolean {
   return workspace.getConfiguration(CONFIG_SECTION).get<boolean>(setting, fallback);
+}
+
+function getFeatureCommandIds(feature: FeatureDefinition): FeatureCommandState[] {
+  return [
+    {
+      label: 'ID',
+      command: feature.command
+    },
+    ...('additionalCommands' in feature ? feature.additionalCommands : [])
+  ];
 }

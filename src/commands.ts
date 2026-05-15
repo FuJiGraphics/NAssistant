@@ -1,15 +1,20 @@
 import type * as vscode from 'vscode';
-import { commands, env, window } from 'vscode';
+import { commands, env } from 'vscode';
 
+import {
+  type AssistantTarget,
+  getAssistantTargetLabel,
+  getDefaultAssistantTarget,
+  pasteTextToAssistant
+} from './assistantTargets';
 import { SIDEBAR_VIEW_ID } from './constants';
+import {
+  buildCurrentContext,
+  buildFileReferenceContext,
+  buildSelectionLocationContext
+} from './contextBuilder';
 import { isFeatureEnabled } from './features';
 import { showStatusMessage } from './notifications';
-import {
-  formatAiContext,
-  formatAiFileReferences,
-  formatFileReference,
-  formatResourcePath
-} from './referenceFormat';
 
 export async function openSettingsView(): Promise<void> {
   await commands.executeCommand(`${SIDEBAR_VIEW_ID}.focus`);
@@ -21,18 +26,15 @@ export async function copySelectionAsAiContext(): Promise<void> {
     return;
   }
 
-  const editor = window.activeTextEditor;
+  const context = buildSelectionLocationContext();
 
-  if (!editor || editor.selection.isEmpty) {
+  if (!context) {
     showStatusMessage('NAssistant: Select code before copying a location.', 2500);
     return;
   }
 
-  const reference = formatFileReference(editor.document, editor.selection);
-  const contextText = formatAiContext(reference);
-
-  await env.clipboard.writeText(contextText);
-  showStatusMessage(`NAssistant: Copied ${reference}`, 2500);
+  await env.clipboard.writeText(context.text);
+  showStatusMessage(`NAssistant: Copied ${context.label}`, 2500);
 }
 
 export async function copyFileReferenceForAi(
@@ -44,17 +46,41 @@ export async function copyFileReferenceForAi(
     return;
   }
 
-  const references = await getFileReferences(resource, selectedResources);
+  const context = await buildFileReferenceContext(resource, selectedResources);
 
-  if (references.length === 0) {
+  if (!context) {
     showStatusMessage('NAssistant: Select a file before copying a reference.', 2500);
     return;
   }
 
-  const contextText = formatAiFileReferences(references);
+  await env.clipboard.writeText(context.text);
+  showStatusMessage(`NAssistant: Copied ${context.label}`, 2500);
+}
 
-  await env.clipboard.writeText(contextText);
-  showStatusMessage(`NAssistant: Copied ${references.length === 1 ? references[0] : `${references.length} files`}`, 2500);
+export async function pasteContextToAssistant(
+  storage: vscode.Memento,
+  resource?: vscode.Uri,
+  selectedResources?: vscode.Uri[]
+): Promise<void> {
+  const target = getDefaultAssistantTarget();
+
+  await pasteContextToAssistantTarget(target, storage, resource, selectedResources);
+}
+
+export async function pasteContextToClaude(
+  storage: vscode.Memento,
+  resource?: vscode.Uri,
+  selectedResources?: vscode.Uri[]
+): Promise<void> {
+  await pasteContextToAssistantTarget('claude', storage, resource, selectedResources);
+}
+
+export async function pasteContextToCodex(
+  storage: vscode.Memento,
+  resource?: vscode.Uri,
+  selectedResources?: vscode.Uri[]
+): Promise<void> {
+  await pasteContextToAssistantTarget('codex', storage, resource, selectedResources);
 }
 
 export async function openShortcutEditor(command: string): Promise<void> {
@@ -67,26 +93,28 @@ export async function openShortcutEditor(command: string): Promise<void> {
   }
 }
 
-async function getFileReferences(resource?: vscode.Uri, selectedResources?: vscode.Uri[]): Promise<string[]> {
-  const resources = selectedResources && selectedResources.length > 0 ? selectedResources : resource ? [resource] : [];
-
-  if (resources.length > 0) {
-    return resources.map(formatResourcePath);
+async function pasteContextToAssistantTarget(
+  target: AssistantTarget,
+  storage: vscode.Memento,
+  resource?: vscode.Uri,
+  selectedResources?: vscode.Uri[]
+): Promise<void> {
+  if (!isFeatureEnabled('pasteContextToAssistant')) {
+    showStatusMessage('NAssistant: Paste Context to Assistant is disabled.', 2500);
+    return;
   }
 
-  return copyExplorerRelativePaths();
-}
+  const context = await buildCurrentContext(resource, selectedResources);
 
-async function copyExplorerRelativePaths(): Promise<string[]> {
+  if (!context) {
+    showStatusMessage('NAssistant: Select code or a file before pasting context.', 2500);
+    return;
+  }
+
   try {
-    await commands.executeCommand('copyRelativeFilePath');
-    const copiedText = await env.clipboard.readText();
-
-    return copiedText
-      .split(/\r?\n/)
-      .map((line) => line.trim())
-      .filter(Boolean);
+    await pasteTextToAssistant(target, context.text, storage);
+    showStatusMessage(`NAssistant: Pasted ${context.label} to ${getAssistantTargetLabel(target)}.`, 2500);
   } catch {
-    return [];
+    showStatusMessage(`NAssistant: Could not paste context to ${getAssistantTargetLabel(target)}.`, 3500);
   }
 }

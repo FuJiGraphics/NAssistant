@@ -195,12 +195,13 @@ export function createSettingsHtml(state: SettingsState): string {
     }
 
     .actions {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
+      display: flex;
+      flex-wrap: wrap;
       gap: 6px;
     }
 
     .actionButton {
+      flex: 0 0 auto;
       padding: 4px 8px;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -208,6 +209,7 @@ export function createSettingsHtml(state: SettingsState): string {
     }
 
     .shortcutButton {
+      flex: 1 1 132px;
       text-align: left;
     }
 
@@ -262,12 +264,12 @@ export function createSettingsHtml(state: SettingsState): string {
     }
 
     @media (max-width: 240px) {
-      .actions {
-        grid-template-columns: 1fr;
-      }
-
       .refreshButton {
         display: none;
+      }
+
+      .actionButton {
+        flex: 1 1 100%;
       }
     }
   </style>
@@ -359,6 +361,10 @@ export function createSettingsHtml(state: SettingsState): string {
         const css = feature.enabled ? 'featureCard' : 'featureCard disabled';
         const toggleCss = feature.enabled ? 'toggle isOn' : 'toggle';
         const checked = feature.enabled ? 'true' : 'false';
+        const commandIds = feature.commandIds || [{ label: 'ID', command: feature.command }];
+        const commandButtons = commandIds.map((item) => {
+          return '<button class="actionButton" type="button" data-action="copy-command" data-command="' + escapeHtml(item.command) + '">' + escapeHtml(item.label) + '</button>';
+        }).join('');
 
         return '<article class="' + css + '">' +
           '<div class="featureTop">' +
@@ -373,7 +379,7 @@ export function createSettingsHtml(state: SettingsState): string {
             '<button class="actionButton shortcutButton" type="button" data-action="shortcut" data-command="' + escapeHtml(feature.command) + '">' +
               '<span class="subtle">Shortcut</span> <span class="shortcutValue">' + escapeHtml(feature.shortcut) + '</span>' +
             '</button>' +
-            '<button class="actionButton" type="button" data-action="copy-command" data-command="' + escapeHtml(feature.command) + '">ID</button>' +
+            commandButtons +
           '</div>' +
         '</article>';
       }).join('');
