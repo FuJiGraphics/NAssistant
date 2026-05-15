@@ -5,7 +5,7 @@ import { CONFIG_SECTION } from './constants';
 
 const LAST_ASSISTANT_TARGET_KEY = 'lastAssistantTarget';
 const DEFAULT_TARGET_SETTING = 'assistant.defaultTarget';
-const ASSISTANT_PASTE_DELAY_MS = 350;
+const ASSISTANT_FOCUS_DELAY_MS = 350;
 const CLIPBOARD_RESTORE_DELAY_MS = 150;
 
 export type AssistantTarget = 'claude' | 'codex';
@@ -46,9 +46,9 @@ export async function pasteTextToAssistant(
   const targetDefinition = TARGETS[target];
 
   await commands.executeCommand(targetDefinition.openCommand);
-  await delay(ASSISTANT_PASTE_DELAY_MS);
+  await delay(ASSISTANT_FOCUS_DELAY_MS);
   await pasteTextThroughClipboard(text);
-  await storage.update(LAST_ASSISTANT_TARGET_KEY, target);
+  void storage.update(LAST_ASSISTANT_TARGET_KEY, target).then(undefined, () => undefined);
 }
 
 async function pasteTextThroughClipboard(text: string): Promise<void> {
@@ -57,10 +57,18 @@ async function pasteTextThroughClipboard(text: string): Promise<void> {
   try {
     await env.clipboard.writeText(text);
     await commands.executeCommand('editor.action.clipboardPasteAction');
-    await delay(CLIPBOARD_RESTORE_DELAY_MS);
-  } finally {
+  } catch (error) {
     await env.clipboard.writeText(previousClipboardText);
+    throw error;
   }
+
+  restoreClipboardLater(previousClipboardText);
+}
+
+function restoreClipboardLater(text: string): void {
+  void delay(CLIPBOARD_RESTORE_DELAY_MS)
+    .then(() => env.clipboard.writeText(text))
+    .then(undefined, () => undefined);
 }
 
 function isAssistantTarget(value: unknown): value is AssistantTarget {
