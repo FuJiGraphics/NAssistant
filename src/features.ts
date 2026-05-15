@@ -1,5 +1,12 @@
 import { workspace } from 'vscode';
 
+import {
+  type AssistantTarget,
+  type AssistantTargetOption,
+  getAssistantTargetLabel,
+  getAssistantTargetOptions,
+  getConfiguredAssistantTarget
+} from './assistantTargets';
 import { COMMANDS, CONFIG_SECTION } from './constants';
 
 export const FEATURE_DEFINITIONS = [
@@ -31,17 +38,7 @@ export const FEATURE_DEFINITIONS = [
     context: 'Editor selection or Explorer file',
     shortcut: 'Ctrl+Shift+V',
     macShortcut: 'Cmd+Shift+V',
-    preview: 'Assistant input <- [location: src/example.ts:12-38]',
-    additionalCommands: [
-      {
-        label: 'Claude',
-        command: COMMANDS.pasteContextToClaude
-      },
-      {
-        label: 'Codex',
-        command: COMMANDS.pasteContextToCodex
-      }
-    ]
+    preview: 'Assistant input <- [location: src/example.ts:12-38]'
   }
 ] as const;
 
@@ -66,11 +63,25 @@ export interface FeatureCommandState {
 }
 
 export interface SettingsState {
+  assistantTarget: AssistantTargetState;
   features: FeatureState[];
 }
 
+export interface AssistantTargetState {
+  current: AssistantTarget;
+  label: string;
+  options: AssistantTargetOption[];
+}
+
 export function getSettingsState(): SettingsState {
+  const assistantTarget = getConfiguredAssistantTarget();
+
   return {
+    assistantTarget: {
+      current: assistantTarget,
+      label: getAssistantTargetLabel(assistantTarget),
+      options: getAssistantTargetOptions()
+    },
     features: FEATURE_DEFINITIONS.map((feature) => ({
       id: feature.id,
       title: feature.title,
@@ -108,7 +119,6 @@ function getFeatureCommandIds(feature: FeatureDefinition): FeatureCommandState[]
     {
       label: 'ID',
       command: feature.command
-    },
-    ...('additionalCommands' in feature ? feature.additionalCommands : [])
+    }
   ];
 }

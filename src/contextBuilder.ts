@@ -11,6 +11,15 @@ import {
 export interface ContextBuildResult {
   text: string;
   label: string;
+  fileReferences?: string[];
+}
+
+export type ContextBuildSource = 'auto' | 'explorer';
+export type ExplorerClipboardMode = 'legacy' | 'guarded';
+
+export interface ContextBuildOptions {
+  source?: ContextBuildSource;
+  explorerClipboardMode?: ExplorerClipboardMode;
 }
 
 export function buildSelectionLocationContext(): ContextBuildResult | undefined {
@@ -30,28 +39,27 @@ export function buildSelectionLocationContext(): ContextBuildResult | undefined 
 
 export async function buildFileReferenceContext(
   resource?: vscode.Uri,
-  selectedResources?: vscode.Uri[]
+  selectedResources?: vscode.Uri[],
+  options: ContextBuildOptions = {}
 ): Promise<ContextBuildResult | undefined> {
-  const references = await getFileReferences(resource, selectedResources);
+  const references = await getFileReferences(resource, selectedResources, options);
 
-  if (references.length === 0) {
-    return undefined;
-  }
-
-  return {
-    text: formatAiFileReferences(references),
-    label: references.length === 1 ? references[0] : `${references.length} files`
-  };
+  return buildContextFromReferences(references);
 }
 
 export async function buildCurrentContext(
   resource?: vscode.Uri,
-  selectedResources?: vscode.Uri[]
+  selectedResources?: vscode.Uri[],
+  options: ContextBuildOptions = {}
 ): Promise<ContextBuildResult | undefined> {
   const explicitResources = getExplicitResources(resource, selectedResources);
 
   if (explicitResources.length > 0) {
     return buildContextFromReferences(explicitResources.map(formatResourcePath));
+  }
+
+  if (options.source === 'explorer') {
+    return buildFileReferenceContext(resource, selectedResources, options);
   }
 
   const selectionContext = buildSelectionLocationContext();
@@ -60,17 +68,21 @@ export async function buildCurrentContext(
     return selectionContext;
   }
 
-  return buildFileReferenceContext(resource, selectedResources);
+  return buildFileReferenceContext(resource, selectedResources, options);
 }
 
-async function getFileReferences(resource?: vscode.Uri, selectedResources?: vscode.Uri[]): Promise<string[]> {
+async function getFileReferences(
+  resource?: vscode.Uri,
+  selectedResources?: vscode.Uri[],
+  options: ContextBuildOptions = {}
+): Promise<string[]> {
   const explicitResources = getExplicitResources(resource, selectedResources);
 
   if (explicitResources.length > 0) {
     return explicitResources.map(formatResourcePath);
   }
 
-  return copyExplorerRelativePaths();
+  return copyExplorerRelativePaths(options.explorerClipboardMode ?? 'legacy');
 }
 
 function getExplicitResources(resource?: vscode.Uri, selectedResources?: vscode.Uri[]): vscode.Uri[] {
@@ -84,15 +96,47 @@ function buildContextFromReferences(references: string[]): ContextBuildResult | 
 
   return {
     text: formatAiFileReferences(references),
-    label: references.length === 1 ? references[0] : `${references.length} files`
+    label: references.length === 1 ? references[0] : `${references.length} files`,
+    fileReferences: references
   };
 }
 
-async function copyExplorerRelativePaths(): Promise<string[]> {
+async function copyExplorerRelativePaths(mode: ExplorerClipboardMode): Promise<string[]> {
   const previousClipboardText = await env.clipboard.readText();
 
   try {
-    await commands.executeCommand('copyRelativeFilePath');
+    if (mode === 'guarded') {
+      return copyGuardedClipboardCommandLines('copyRelativeFilePath');
+    }
+
+    return copyClipboardCommandLines('copyRelativeFilePath');
+  } finally {
+    await env.clipboard.writeText(previousClipboardText);
+  }
+}
+
+async function copyGuardedClipboardCommandLines(command: string): Promise<string[]> {
+  const sentinelText = `__NASSISTANT_COPY_RELATIVE_PATH_SENTINEL_${Date.now()}__`;
+
+  try {
+    await env.clipboard.writeText(sentinelText);
+    await commands.executeCommand(command);
+
+    const copiedText = await env.clipboard.readText();
+
+    if (copiedText === sentinelText) {
+      return [];
+    }
+
+    return parseCopiedPathLines(copiedText).filter(isGuardedCopiedPathLine);
+  } catch {
+    return [];
+  }
+}
+
+async function copyClipboardCommandLines(command: string): Promise<string[]> {
+  try {
+    await commands.executeCommand(command);
     const copiedText = await env.clipboard.readText();
 
     return copiedText
@@ -101,7 +145,16 @@ async function copyExplorerRelativePaths(): Promise<string[]> {
       .filter(Boolean);
   } catch {
     return [];
-  } finally {
-    await env.clipboard.writeText(previousClipboardText);
   }
+}
+
+function parseCopiedPathLines(copiedText: string): string[] {
+  return copiedText
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
+
+function isGuardedCopiedPathLine(line: string): boolean {
+  return !line.startsWith('[') && !line.startsWith('- ') && !/^https?:\/\//i.test(line);
 }

@@ -70,7 +70,10 @@
         "command": "nassistant.pasteContextToAssistant",
         "key": "ctrl+shift+v",
         "mac": "cmd+shift+v",
-        "when": "filesExplorerFocus && config.nassistant.features.pasteContextToAssistant.enabled"
+        "when": "(filesExplorerFocus || explorerViewletFocus) && config.nassistant.features.pasteContextToAssistant.enabled",
+        "args": {
+          "source": "explorer"
+        }
       }
     ],
     "menus": {
@@ -94,7 +97,7 @@
         },
         {
           "command": "nassistant.pasteContextToAssistant",
-          "when": "resourceSet && !explorerResourceIsFolder && config.nassistant.features.pasteContextToAssistant.enabled",
+          "when": "resourceSet && config.nassistant.features.pasteContextToAssistant.enabled",
           "group": "navigation"
         }
       ]
@@ -123,8 +126,12 @@
             "claude",
             "codex"
           ],
-          "default": "codex",
-          "description": "Default assistant target used when NAssistant cannot infer a visible assistant target."
+          "enumItemLabels": [
+            "Claude (Default)",
+            "Codex"
+          ],
+          "default": "claude",
+          "description": "Assistant target used by the default Paste Context to Assistant command."
         }
       }
     },

@@ -1,6 +1,12 @@
 import type * as vscode from 'vscode';
 import { ConfigurationTarget, env, workspace } from 'vscode';
 
+import {
+  ASSISTANT_TARGET_SETTING,
+  type AssistantTarget,
+  getAssistantTargetLabel,
+  isAssistantTarget
+} from './assistantTargets';
 import { openShortcutEditor } from './commands';
 import { CONFIG_SECTION } from './constants';
 import { type FeatureId, getFeatureDefinition, getSettingsState, isFeatureId } from './features';
@@ -20,6 +26,10 @@ type SettingsMessage =
       enabled: boolean;
     }
   | {
+      type: 'setAssistantTarget';
+      target: AssistantTarget;
+    }
+  | {
       type: 'openShortcutEditor';
       command: string;
     }
@@ -37,14 +47,14 @@ export class SettingsViewProvider implements vscode.WebviewViewProvider {
       enableScripts: true
     };
 
-    webviewView.webview.html = createSettingsHtml(getSettingsState());
     webviewView.webview.onDidReceiveMessage((message: unknown) => {
       void this.handleMessage(message);
     });
+    this.renderHtml();
   }
 
   refresh(): void {
-    this.postState();
+    this.renderHtml();
   }
 
   private async handleMessage(message: unknown): Promise<void> {
@@ -54,12 +64,19 @@ export class SettingsViewProvider implements vscode.WebviewViewProvider {
 
     switch (message.type) {
       case 'ready':
-      case 'refresh':
         this.postState();
+        return;
+
+      case 'refresh':
+        this.renderHtml();
         return;
 
       case 'toggleFeature':
         await this.updateFeature(message.featureId, message.enabled);
+        return;
+
+      case 'setAssistantTarget':
+        await this.updateAssistantTarget(message.target);
         return;
 
       case 'openShortcutEditor':
@@ -86,11 +103,27 @@ export class SettingsViewProvider implements vscode.WebviewViewProvider {
     this.postState();
   }
 
+  private async updateAssistantTarget(target: AssistantTarget): Promise<void> {
+    await workspace
+      .getConfiguration(CONFIG_SECTION)
+      .update(ASSISTANT_TARGET_SETTING, target, ConfigurationTarget.Global);
+    this.postState();
+    showStatusMessage(`NAssistant: Paste target set to ${getAssistantTargetLabel(target)}.`, 2000);
+  }
+
   private postState(): void {
     this.view?.webview.postMessage({
       type: 'state',
       state: getSettingsState()
     });
+  }
+
+  private renderHtml(): void {
+    if (!this.view) {
+      return;
+    }
+
+    this.view.webview.html = createSettingsHtml(getSettingsState());
   }
 }
 
@@ -108,6 +141,9 @@ function isSettingsMessage(message: unknown): message is SettingsMessage {
 
     case 'toggleFeature':
       return isFeatureId(candidate.featureId) && typeof candidate.enabled === 'boolean';
+
+    case 'setAssistantTarget':
+      return isAssistantTarget(candidate.target);
 
     case 'openShortcutEditor':
     case 'copyCommandId':

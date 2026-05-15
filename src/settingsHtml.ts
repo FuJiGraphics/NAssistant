@@ -27,7 +27,8 @@ export function createSettingsHtml(state: SettingsState): string {
       font: 12px/1.45 var(--vscode-font-family);
     }
 
-    button {
+    button,
+    select {
       font: inherit;
     }
 
@@ -119,6 +120,10 @@ export function createSettingsHtml(state: SettingsState): string {
       margin-top: 0;
     }
 
+    .section + .section {
+      margin-top: 16px;
+    }
+
     .sectionHeader {
       display: flex;
       align-items: center;
@@ -194,6 +199,27 @@ export function createSettingsHtml(state: SettingsState): string {
       white-space: nowrap;
     }
 
+    .targetField {
+      display: grid;
+      gap: 5px;
+      margin-bottom: 10px;
+    }
+
+    .targetLabel {
+      color: var(--vscode-descriptionForeground);
+      font-size: 11px;
+    }
+
+    .targetSelect {
+      width: 100%;
+      min-height: 28px;
+      border: 1px solid var(--vscode-dropdown-border, var(--vscode-input-border, var(--vscode-panel-border)));
+      border-radius: 6px;
+      color: var(--vscode-dropdown-foreground, var(--vscode-foreground));
+      background: var(--vscode-dropdown-background, var(--vscode-input-background));
+      padding: 3px 8px;
+    }
+
     .actions {
       display: flex;
       flex-wrap: wrap;
@@ -254,7 +280,8 @@ export function createSettingsHtml(state: SettingsState): string {
 
     .toggle:focus-visible,
     .actionButton:focus-visible,
-    .refreshButton:focus-visible {
+    .refreshButton:focus-visible,
+    .targetSelect:focus-visible {
       outline: 1px solid var(--vscode-focusBorder);
       outline-offset: 2px;
     }
@@ -308,6 +335,17 @@ export function createSettingsHtml(state: SettingsState): string {
       vscode.postMessage({ type: 'refresh' });
     });
 
+    document.addEventListener('change', (event) => {
+      const target = event.target instanceof HTMLSelectElement ? event.target : undefined;
+
+      if (target?.dataset.action === 'select-target') {
+        vscode.postMessage({
+          type: 'setAssistantTarget',
+          target: target.value
+        });
+      }
+    });
+
     document.addEventListener('click', (event) => {
       const source = event.target instanceof Element ? event.target : event.target?.parentElement;
       const target = source?.closest('[data-action]');
@@ -353,6 +391,7 @@ export function createSettingsHtml(state: SettingsState): string {
     });
 
     function render() {
+      const assistantTarget = state.assistantTarget || getFallbackAssistantTarget();
       const enabledCount = state.features.filter((feature) => feature.enabled).length;
 
       featureCount.textContent = enabledCount + '/' + state.features.length;
@@ -362,6 +401,9 @@ export function createSettingsHtml(state: SettingsState): string {
         const toggleCss = feature.enabled ? 'toggle isOn' : 'toggle';
         const checked = feature.enabled ? 'true' : 'false';
         const commandIds = feature.commandIds || [{ label: 'ID', command: feature.command }];
+        const targetSelector = feature.id === 'pasteContextToAssistant'
+          ? renderAssistantTargetSelector(assistantTarget)
+          : '';
         const commandButtons = commandIds.map((item) => {
           return '<button class="actionButton" type="button" data-action="copy-command" data-command="' + escapeHtml(item.command) + '">' + escapeHtml(item.label) + '</button>';
         }).join('');
@@ -374,6 +416,7 @@ export function createSettingsHtml(state: SettingsState): string {
             '</div>' +
             '<button class="' + toggleCss + '" type="button" role="switch" aria-checked="' + checked + '" aria-label="Toggle ' + escapeHtml(feature.title) + '" data-action="toggle-feature" data-feature-id="' + escapeHtml(feature.id) + '"></button>' +
           '</div>' +
+          targetSelector +
           '<div class="preview">' + escapeHtml(feature.preview) + '</div>' +
           '<div class="actions">' +
             '<button class="actionButton shortcutButton" type="button" data-action="shortcut" data-command="' + escapeHtml(feature.command) + '">' +
@@ -383,6 +426,32 @@ export function createSettingsHtml(state: SettingsState): string {
           '</div>' +
         '</article>';
       }).join('');
+    }
+
+    function renderAssistantTargetSelector(assistantTarget) {
+      const options = assistantTarget.options || getFallbackAssistantTarget().options;
+
+      return '<label class="targetField">' +
+        '<span class="targetLabel">Target</span>' +
+        '<select class="targetSelect" data-action="select-target" aria-label="Paste context target">' +
+          options.map((option) => {
+            const selected = option.target === assistantTarget.current ? ' selected' : '';
+
+            return '<option value="' + escapeHtml(option.target) + '"' + selected + '>' + escapeHtml(option.label) + '</option>';
+          }).join('') +
+        '</select>' +
+      '</label>';
+    }
+
+    function getFallbackAssistantTarget() {
+      return {
+        current: 'claude',
+        label: 'Claude (Default)',
+        options: [
+          { target: 'claude', label: 'Claude (Default)' },
+          { target: 'codex', label: 'Codex' }
+        ]
+      };
     }
 
     function escapeHtml(value) {

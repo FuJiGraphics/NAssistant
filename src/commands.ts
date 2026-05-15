@@ -4,17 +4,31 @@ import { commands, env } from 'vscode';
 import {
   type AssistantTarget,
   getAssistantTargetLabel,
-  getDefaultAssistantTarget,
+  getConfiguredAssistantTarget,
   pasteTextToAssistant
 } from './assistantTargets';
 import { SIDEBAR_VIEW_ID } from './constants';
 import {
+  type ContextBuildOptions,
+  type ContextBuildResult,
+  type ContextBuildSource,
   buildCurrentContext,
   buildFileReferenceContext,
   buildSelectionLocationContext
 } from './contextBuilder';
 import { isFeatureEnabled } from './features';
 import { showStatusMessage } from './notifications';
+
+const CLAUDE_EXPLORER_FILE_PASTE_DELAY_MS = 400;
+
+interface PasteContextCommandOptions {
+  source?: ContextBuildSource;
+}
+
+interface PasteContextArguments extends ContextBuildOptions {
+  resource?: vscode.Uri;
+  selectedResources?: vscode.Uri[];
+}
 
 export async function openSettingsView(): Promise<void> {
   await commands.executeCommand(`${SIDEBAR_VIEW_ID}.focus`);
@@ -58,29 +72,33 @@ export async function copyFileReferenceForAi(
 }
 
 export async function pasteContextToAssistant(
-  storage: vscode.Memento,
-  resource?: vscode.Uri,
+  resourceOrOptions?: vscode.Uri | PasteContextCommandOptions,
   selectedResources?: vscode.Uri[]
 ): Promise<void> {
-  const target = getDefaultAssistantTarget();
-
-  await pasteContextToAssistantTarget(target, storage, resource, selectedResources);
+  await pasteContextToAssistantTarget(
+    getConfiguredAssistantTarget(),
+    parsePasteContextArguments(resourceOrOptions, selectedResources)
+  );
 }
 
 export async function pasteContextToClaude(
-  storage: vscode.Memento,
-  resource?: vscode.Uri,
+  resourceOrOptions?: vscode.Uri | PasteContextCommandOptions,
   selectedResources?: vscode.Uri[]
 ): Promise<void> {
-  await pasteContextToAssistantTarget('claude', storage, resource, selectedResources);
+  await pasteContextToAssistantTarget(
+    'claude',
+    parsePasteContextArguments(resourceOrOptions, selectedResources)
+  );
 }
 
 export async function pasteContextToCodex(
-  storage: vscode.Memento,
-  resource?: vscode.Uri,
+  resourceOrOptions?: vscode.Uri | PasteContextCommandOptions,
   selectedResources?: vscode.Uri[]
 ): Promise<void> {
-  await pasteContextToAssistantTarget('codex', storage, resource, selectedResources);
+  await pasteContextToAssistantTarget(
+    'codex',
+    parsePasteContextArguments(resourceOrOptions, selectedResources)
+  );
 }
 
 export async function openShortcutEditor(command: string): Promise<void> {
@@ -95,26 +113,72 @@ export async function openShortcutEditor(command: string): Promise<void> {
 
 async function pasteContextToAssistantTarget(
   target: AssistantTarget,
-  storage: vscode.Memento,
-  resource?: vscode.Uri,
-  selectedResources?: vscode.Uri[]
+  args: PasteContextArguments
 ): Promise<void> {
   if (!isFeatureEnabled('pasteContextToAssistant')) {
     showStatusMessage('NAssistant: Paste Context to Assistant is disabled.', 2500);
     return;
   }
 
-  const context = await buildCurrentContext(resource, selectedResources);
+  const context = await buildCurrentContext(args.resource, args.selectedResources, {
+    source: args.source,
+    explorerClipboardMode: target === 'codex' || target === 'claude' ? 'guarded' : 'legacy'
+  });
 
   if (!context) {
     showStatusMessage('NAssistant: Select code or a file before pasting context.', 2500);
     return;
   }
 
+  await pasteBuiltContextToAssistantTarget(target, context);
+}
+
+async function pasteBuiltContextToAssistantTarget(
+  target: AssistantTarget,
+  context: ContextBuildResult
+): Promise<void> {
   try {
-    await pasteTextToAssistant(target, context.text, storage);
+    await pasteTextToAssistant(
+      target,
+      context.text,
+      target === 'claude' && context.fileReferences
+        ? {
+            pasteDelayMs: CLAUDE_EXPLORER_FILE_PASTE_DELAY_MS,
+            clearClipboardAfterPaste: false
+          }
+        : undefined
+    );
     showStatusMessage(`NAssistant: Pasted ${context.label} to ${getAssistantTargetLabel(target)}.`, 2500);
   } catch {
     showStatusMessage(`NAssistant: Could not paste context to ${getAssistantTargetLabel(target)}.`, 3500);
   }
+}
+
+function parsePasteContextArguments(
+  resourceOrOptions?: vscode.Uri | PasteContextCommandOptions,
+  selectedResources?: vscode.Uri[]
+): PasteContextArguments {
+  if (isPasteContextCommandOptions(resourceOrOptions)) {
+    return {
+      source: resourceOrOptions.source
+    };
+  }
+
+  return {
+    resource: resourceOrOptions,
+    selectedResources
+  };
+}
+
+function isPasteContextCommandOptions(value: unknown): value is PasteContextCommandOptions {
+  return Boolean(
+    value &&
+      typeof value === 'object' &&
+      'source' in value &&
+      isContextBuildSource((value as PasteContextCommandOptions).source)
+  );
+}
+
+function isContextBuildSource(value: unknown): value is ContextBuildSource {
+  return value === 'auto' || value === 'explorer';
 }

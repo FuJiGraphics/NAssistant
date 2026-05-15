@@ -10,7 +10,7 @@ It does not replace Claude, Codex, ChatGPT, Copilot Chat, or any other AI coding
 
 NAssistant has an initial VS Code extension with focused context-copying features.
 
-The extension includes a lightweight Activity Bar entry, selection/file reference copy commands, and a best-effort assistant paste command.
+The extension includes a lightweight Activity Bar entry, selection/file reference copy commands, and an assistant paste command with an inline target selector.
 
 ## Installation
 
@@ -79,11 +79,11 @@ The command is also available from the Explorer context menu.
 
 ### Paste Context to Assistant
 
-When code is selected in the editor or a file is selected in the VS Code Explorer, `Command+Shift+V` on macOS or `Ctrl+Shift+V` on Windows/Linux builds the same context format and attempts to paste it into an assistant input.
+When code is selected in the editor or a file is selected in the VS Code Explorer, `Command+Shift+V` on macOS or `Ctrl+Shift+V` on Windows/Linux builds the same context format and attempts to paste it into the selected assistant input.
 
-The default fallback target is Codex. `NAssistant: Paste Context to Claude` and `NAssistant: Paste Context to Codex` can be used directly from the Command Palette.
+The target selector lives inside the `Paste Context to Assistant` card in the NAssistant settings view. `NAssistant: Paste Context to Claude` and `NAssistant: Paste Context to Codex` can still be used directly from the Command Palette.
 
-This command does not submit the message. It temporarily uses the clipboard to perform the paste, then restores the previous clipboard text.
+This command does not submit the message. It writes the generated context to the clipboard, opens the configured target, immediately asks VS Code to paste, and then clears the clipboard.
 
 ## Planned Features
 
@@ -186,7 +186,7 @@ Run the extension locally:
 2. Run the `Run Extension` debug configuration.
 3. VS Code will open an Extension Development Host window.
 
-The current extension has an Activity Bar entry, selection/file reference copy commands, and an assistant paste command.
+The current extension has an Activity Bar entry, selection/file reference copy commands, and an assistant paste command with an inline target selector.
 
 ## Contributing
 

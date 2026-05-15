@@ -1,28 +1,43 @@
-import type * as vscode from 'vscode';
 import { commands, env, workspace } from 'vscode';
 
 import { CONFIG_SECTION } from './constants';
 
-const LAST_ASSISTANT_TARGET_KEY = 'lastAssistantTarget';
-const DEFAULT_TARGET_SETTING = 'assistant.defaultTarget';
-const ASSISTANT_FOCUS_DELAY_MS = 350;
-const CLIPBOARD_RESTORE_DELAY_MS = 150;
+export const ASSISTANT_TARGET_SETTING = 'assistant.defaultTarget';
 
-export type AssistantTarget = 'claude' | 'codex';
+const ASSISTANT_TARGET_IDS = ['claude', 'codex'] as const;
+const DEFAULT_ASSISTANT_TARGET: AssistantTarget = 'claude';
+
+export type AssistantTarget = (typeof ASSISTANT_TARGET_IDS)[number];
 
 interface AssistantTargetDefinition {
   label: string;
   openCommand: string;
+  focusCommand?: string;
+  pasteDelayMs?: number;
+  clearClipboardAfterPaste?: boolean;
+}
+
+export interface PasteTextOptions {
+  pasteDelayMs?: number;
+  clearClipboardAfterPaste?: boolean;
+}
+
+export interface AssistantTargetOption {
+  target: AssistantTarget;
+  label: string;
 }
 
 const TARGETS: Record<AssistantTarget, AssistantTargetDefinition> = {
   claude: {
-    label: 'Claude',
-    openCommand: 'claude-vscode.sidebar.open'
+    label: 'Claude (Default)',
+    openCommand: 'claude-vscode.sidebar.open',
+    focusCommand: 'claude-vscode.focus'
   },
   codex: {
     label: 'Codex',
-    openCommand: 'chatgpt.openSidebar'
+    openCommand: 'chatgpt.openSidebar',
+    pasteDelayMs: 400,
+    clearClipboardAfterPaste: false
   }
 };
 
@@ -30,49 +45,73 @@ export function getAssistantTargetLabel(target: AssistantTarget): string {
   return TARGETS[target].label;
 }
 
-export function getDefaultAssistantTarget(): AssistantTarget {
+export function getAssistantTargetOptions(): AssistantTargetOption[] {
+  return ASSISTANT_TARGET_IDS.map((target) => ({
+    target,
+    label: TARGETS[target].label
+  }));
+}
+
+export function getConfiguredAssistantTarget(): AssistantTarget {
   const configuredTarget = workspace
     .getConfiguration(CONFIG_SECTION)
-    .get<unknown>(DEFAULT_TARGET_SETTING, 'codex');
+    .get<unknown>(ASSISTANT_TARGET_SETTING, DEFAULT_ASSISTANT_TARGET);
 
-  return isAssistantTarget(configuredTarget) ? configuredTarget : 'codex';
+  return isAssistantTarget(configuredTarget) ? configuredTarget : DEFAULT_ASSISTANT_TARGET;
 }
 
 export async function pasteTextToAssistant(
   target: AssistantTarget,
   text: string,
-  storage: vscode.Memento
+  options: PasteTextOptions = {}
 ): Promise<void> {
   const targetDefinition = TARGETS[target];
 
   await commands.executeCommand(targetDefinition.openCommand);
-  await delay(ASSISTANT_FOCUS_DELAY_MS);
-  await pasteTextThroughClipboard(text);
-  void storage.update(LAST_ASSISTANT_TARGET_KEY, target).then(undefined, () => undefined);
+
+  if (targetDefinition.focusCommand) {
+    await commands.executeCommand(targetDefinition.focusCommand);
+  }
+
+  const pasteDelayMs = options.pasteDelayMs ?? targetDefinition.pasteDelayMs;
+
+  if (pasteDelayMs) {
+    await delay(pasteDelayMs);
+  }
+
+  await pasteTextThroughClipboard(text, {
+    clearClipboard: options.clearClipboardAfterPaste ?? targetDefinition.clearClipboardAfterPaste ?? true
+  });
 }
 
-async function pasteTextThroughClipboard(text: string): Promise<void> {
-  const previousClipboardText = await env.clipboard.readText();
+interface ClipboardPasteOptions {
+  clearClipboard: boolean;
+}
 
+async function pasteTextThroughClipboard(
+  text: string,
+  options: ClipboardPasteOptions
+): Promise<void> {
   try {
     await env.clipboard.writeText(text);
     await commands.executeCommand('editor.action.clipboardPasteAction');
-  } catch (error) {
-    await env.clipboard.writeText(previousClipboardText);
-    throw error;
+  } finally {
+    if (options.clearClipboard) {
+      await discardClipboardText();
+    }
   }
-
-  restoreClipboardLater(previousClipboardText);
 }
 
-function restoreClipboardLater(text: string): void {
-  void delay(CLIPBOARD_RESTORE_DELAY_MS)
-    .then(() => env.clipboard.writeText(text))
-    .then(undefined, () => undefined);
+async function discardClipboardText(): Promise<void> {
+  try {
+    await env.clipboard.writeText('');
+  } catch {
+    // Clipboard cleanup is best-effort.
+  }
 }
 
-function isAssistantTarget(value: unknown): value is AssistantTarget {
-  return value === 'claude' || value === 'codex';
+export function isAssistantTarget(value: unknown): value is AssistantTarget {
+  return ASSISTANT_TARGET_IDS.includes(value as AssistantTarget);
 }
 
 function delay(milliseconds: number): Promise<void> {

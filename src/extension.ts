@@ -20,15 +20,9 @@ export function activate(context: vscode.ExtensionContext): void {
     commands.registerCommand(COMMANDS.openSettings, openSettingsView),
     commands.registerCommand(COMMANDS.copyFileReferenceForAi, copyFileReferenceForAi),
     commands.registerCommand(COMMANDS.copySelectionAsAiContext, copySelectionAsAiContext),
-    commands.registerCommand(COMMANDS.pasteContextToAssistant, (resource?: vscode.Uri, selectedResources?: vscode.Uri[]) =>
-      pasteContextToAssistant(context.globalState, resource, selectedResources)
-    ),
-    commands.registerCommand(COMMANDS.pasteContextToClaude, (resource?: vscode.Uri, selectedResources?: vscode.Uri[]) =>
-      pasteContextToClaude(context.globalState, resource, selectedResources)
-    ),
-    commands.registerCommand(COMMANDS.pasteContextToCodex, (resource?: vscode.Uri, selectedResources?: vscode.Uri[]) =>
-      pasteContextToCodex(context.globalState, resource, selectedResources)
-    ),
+    commands.registerCommand(COMMANDS.pasteContextToAssistant, pasteContextToAssistant),
+    commands.registerCommand(COMMANDS.pasteContextToClaude, pasteContextToClaude),
+    commands.registerCommand(COMMANDS.pasteContextToCodex, pasteContextToCodex),
     workspace.onDidChangeConfiguration((event) => {
       if (event.affectsConfiguration(CONFIG_SECTION)) {
         settingsViewProvider.refresh();
