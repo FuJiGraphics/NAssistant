@@ -5,3 +5,5 @@ src/**
 tsconfig.json
 *.vsix
 *.log
+.vsix-stage*/
+AGENTS.md
