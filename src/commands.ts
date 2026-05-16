@@ -17,6 +17,10 @@ import {
   buildSelectionLocationContext
 } from './contextBuilder';
 import { isFeatureEnabled } from './features';
+import {
+  hideFolderFromExplorer as hideFolderFromExplorerFromSettings,
+  showHiddenExplorerFolders as showHiddenExplorerFoldersFromSettings
+} from './folderVisibility';
 import { showStatusMessage } from './notifications';
 
 const CLAUDE_EXPLORER_FILE_PASTE_DELAY_MS = 400;
@@ -69,6 +73,17 @@ export async function copyFileReferenceForAi(
 
   await env.clipboard.writeText(context.text);
   showStatusMessage(`NAssistant: Copied ${context.label}`, 2500);
+}
+
+export async function hideFolderFromExplorer(
+  resource?: vscode.Uri,
+  selectedResources?: vscode.Uri[]
+): Promise<void> {
+  await hideFolderFromExplorerFromSettings(resource, selectedResources);
+}
+
+export async function showHiddenExplorerFolders(): Promise<void> {
+  await showHiddenExplorerFoldersFromSettings();
 }
 
 export async function pasteContextToAssistant(

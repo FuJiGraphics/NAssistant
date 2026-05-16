@@ -18,10 +18,12 @@
   "activationEvents": [
     "onCommand:nassistant.openSettings",
     "onCommand:nassistant.copyFileReferenceForAi",
+    "onCommand:nassistant.hideFolderFromExplorer",
     "onCommand:nassistant.copySelectionAsAiContext",
     "onCommand:nassistant.pasteContextToAssistant",
     "onCommand:nassistant.pasteContextToClaude",
     "onCommand:nassistant.pasteContextToCodex",
+    "onCommand:nassistant.showHiddenExplorerFolders",
     "onView:nassistant.sidebar"
   ],
   "contributes": {
@@ -29,6 +31,10 @@
       {
         "command": "nassistant.copyFileReferenceForAi",
         "title": "NAssistant: Copy File Reference for AI"
+      },
+      {
+        "command": "nassistant.hideFolderFromExplorer",
+        "title": "NAssistant: Hide Folder from Explorer"
       },
       {
         "command": "nassistant.copySelectionAsAiContext",
@@ -49,6 +55,10 @@
       {
         "command": "nassistant.pasteContextToCodex",
         "title": "NAssistant: Paste Context to Codex"
+      },
+      {
+        "command": "nassistant.showHiddenExplorerFolders",
+        "title": "NAssistant: Show Hidden Explorer Folders"
       }
     ],
     "keybindings": [
@@ -100,6 +110,11 @@
           "group": "navigation"
         },
         {
+          "command": "nassistant.hideFolderFromExplorer",
+          "when": "resourceSet && explorerResourceIsFolder",
+          "group": "navigation"
+        },
+        {
           "command": "nassistant.pasteContextToAssistant",
           "when": "resourceSet && config.nassistant.features.pasteContextToAssistant.enabled",
           "group": "navigation"
@@ -136,6 +151,30 @@
           ],
           "default": "claude",
           "description": "Assistant target used by the default Paste Context to Assistant command."
+        },
+        "nassistant.hiddenExplorerFolders": {
+          "type": "array",
+          "scope": "resource",
+          "default": [],
+          "description": "Folders hidden from the VS Code Explorer through NAssistant so they can be restored later.",
+          "items": {
+            "type": "object",
+            "required": [
+              "path",
+              "pattern"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "path": {
+                "type": "string",
+                "description": "Workspace-relative folder path shown to the user."
+              },
+              "pattern": {
+                "type": "string",
+                "description": "files.exclude glob pattern managed by NAssistant."
+              }
+            }
+          }
         }
       }
     },
@@ -168,5 +207,8 @@
     "@types/node": "20.x",
     "@types/vscode": "1.90.0",
     "typescript": "^5.4.5"
+  },
+  "dependencies": {
+    "minimatch": "^9.0.9"
   }
 }

@@ -77,6 +77,16 @@ Output:
 
 The command is also available from the Explorer context menu.
 
+### Hide Folder from Explorer
+
+When a folder is selected in the VS Code Explorer, the Explorer context menu includes `NAssistant: Hide Folder from Explorer`.
+
+The command updates the current project settings by adding the selected workspace-relative folder path to `files.exclude`. It does not delete, move, or rewrite the folder itself.
+
+To reverse folders hidden through NAssistant, run `NAssistant: Show Hidden Explorer Folders` from the Command Palette and select the folders to restore.
+
+The NAssistant Activity Bar view also includes an `Explorer` tab. It mirrors the workspace file tree, opens files on click, and shows a folder visibility button beside folders. Folders hidden through NAssistant remain visible there in a dimmed state while the normal VS Code Explorer hides them.
+
 ### Paste Context to Assistant
 
 When code is selected in the editor or a file is selected in the VS Code Explorer, `Command+Shift+V` on macOS or `Ctrl+Shift+V` on Windows/Linux builds the same context format and attempts to paste it into the selected assistant input.
