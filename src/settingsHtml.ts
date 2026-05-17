@@ -1735,9 +1735,6 @@ export function createSettingsHtml(state: NAssistantState): string {
       const selectedCss = selectedExplorerUris.includes(node.uri) ? ' isSelected' : '';
       const dropCss = node.uri === dropTargetUri ? ' isDropTarget' : '';
       const editCss = isRenaming ? ' isEditing' : '';
-      const disclosure = node.type === 'folder'
-        ? isExpanded ? 'v' : '>'
-        : '';
       const actions = isRenaming ? '' : renderNodeActions(node);
       const gitBadge = renderGitBadge(node);
       const label = isRenaming
@@ -1745,7 +1742,7 @@ export function createSettingsHtml(state: NAssistantState): string {
         : '<span class="nodeLabel">' + escapeHtml(node.name) + '</span>' + gitBadge;
       const mainCss = isRenaming ? 'nodeMain renameMain' : 'nodeMain';
       const main = '<div class="' + mainCss + '" title="' + escapeHtml((node.relativePath || node.name) + (node.gitTooltip && !isRenaming ? ' - ' + node.gitTooltip : '')) + '">' +
-          renderDisclosureControl(node, disclosure) +
+          renderDisclosureControl(node) +
           renderNodeIcon(node, isRenaming) +
           label +
         '</div>';
@@ -1793,7 +1790,7 @@ export function createSettingsHtml(state: NAssistantState): string {
       return 'rgba(' + red + ', ' + green + ', ' + blue + ', ' + alpha + ')';
     }
 
-    function renderDisclosureControl(node, disclosure) {
+    function renderDisclosureControl(node) {
       if (node.type !== 'folder') {
         return '<span class="disclosure disclosurePlaceholder" aria-hidden="true"></span>';
       }
@@ -1801,7 +1798,13 @@ export function createSettingsHtml(state: NAssistantState): string {
       const isExpanded = getEffectiveExpanded(node);
       const label = isExpanded ? 'Collapse' : 'Expand';
 
-      return '<button class="disclosure disclosureButton" type="button" data-row-control="true" data-action="toggle-node" data-uri="' + escapeHtml(node.uri) + '" data-expanded="' + String(Boolean(isExpanded)) + '" title="' + label + '" aria-label="' + label + '">' + disclosure + '</button>';
+      return '<button class="disclosure disclosureButton" type="button" data-row-control="true" data-action="toggle-node" data-uri="' + escapeHtml(node.uri) + '" data-expanded="' + String(Boolean(isExpanded)) + '" title="' + label + '" aria-label="' + label + '">' +
+        '<span class="disclosureChevron" aria-hidden="true">' +
+          '<svg viewBox="0 0 12 12" focusable="false">' +
+            '<path d="M4.25 2.5 7.75 6l-3.5 3.5"></path>' +
+          '</svg>' +
+        '</span>' +
+      '</button>';
     }
 
     function renderNodeIcon(node, isRenaming) {
@@ -2006,7 +2009,6 @@ export function createSettingsHtml(state: NAssistantState): string {
       const label = expanded ? 'Collapse' : 'Expand';
 
       disclosure.dataset.expanded = String(Boolean(expanded));
-      disclosure.textContent = expanded ? 'v' : '>';
       disclosure.setAttribute('title', label);
       disclosure.setAttribute('aria-label', label);
       disclosure.setAttribute('data-uri', uri);

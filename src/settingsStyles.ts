@@ -609,11 +609,14 @@ export function createSettingsStyles(state: NAssistantState): string {
     .depth12 .nodeMain { padding: 0 0 0 146px; }
 
     .disclosure {
-      flex: 0 0 14px;
-      width: 14px;
-      height: 18px;
+      position: relative;
+      display: inline-grid;
+      place-items: center;
+      flex: 0 0 17px;
+      width: 17px;
+      height: 22px;
+      margin-right: 1px;
       color: var(--vscode-descriptionForeground);
-      text-align: center;
     }
 
     .disclosureButton {
@@ -624,8 +627,52 @@ export function createSettingsStyles(state: NAssistantState): string {
       font: inherit;
     }
 
+    .disclosureChevron {
+      display: inline-grid;
+      place-items: center;
+      width: 12px;
+      height: 12px;
+      opacity: 0.86;
+      transform: translateX(-1px);
+      transition: transform 90ms ease, opacity 90ms ease;
+    }
+
+    .disclosureChevron svg {
+      width: 12px;
+      height: 12px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.7;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .disclosureButton[data-expanded="true"] .disclosureChevron {
+      transform: translateX(-1px) rotate(90deg);
+    }
+
+    .treeRow:hover:not(.isSelected) .disclosureButton,
+    .treeRow:focus-within:not(.isSelected) .disclosureButton {
+      color: var(--vscode-foreground);
+    }
+
+    .treeRow.isSelected .disclosureButton {
+      color: var(--vscode-list-activeSelectionForeground);
+    }
+
+    .disclosureButton:hover .disclosureChevron,
+    .disclosureButton:focus-visible .disclosureChevron {
+      opacity: 1;
+    }
+
     .disclosurePlaceholder {
       cursor: default;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .disclosureChevron {
+        transition: none;
+      }
     }
 
     .nodeIcon {
