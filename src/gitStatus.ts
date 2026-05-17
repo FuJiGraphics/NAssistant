@@ -131,7 +131,7 @@ function parsePorcelainStatus(
 
   for (let index = 0; index < chunks.length; index++) {
     const chunk = chunks[index];
-    const status = parsePorcelainEntry(chunk, chunks[index + 1]);
+    const status = parsePorcelainEntry(chunk);
 
     if (!status) {
       continue;
@@ -158,8 +158,7 @@ function parsePorcelainStatus(
 }
 
 function parsePorcelainEntry(
-  chunk: string,
-  nextChunk?: string
+  chunk: string
 ): { path: string; kind: GitStatusKind } | undefined {
   if (chunk.startsWith('? ')) {
     return {
@@ -192,13 +191,6 @@ function parsePorcelainEntry(
     return {
       path: statusPath,
       kind: getStatusKindFromXY(xy)
-    };
-  }
-
-  if (nextChunk && chunk.startsWith('2 ')) {
-    return {
-      path: nextChunk,
-      kind: 'renamed'
     };
   }
 
