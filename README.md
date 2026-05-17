@@ -85,7 +85,9 @@ The command updates the current project settings by adding the selected workspac
 
 To reverse folders hidden through NAssistant, run `NAssistant: Show Hidden Explorer Folders` from the Command Palette and select the folders to restore.
 
-The NAssistant Activity Bar view also includes an `Explorer` tab. It mirrors the workspace file tree, opens files on click, and shows a folder visibility button beside folders. Folders hidden through NAssistant remain visible there in a dimmed state while the normal VS Code Explorer hides them.
+The NAssistant Activity Bar view also includes an `Explorer` tab. It mirrors the workspace file tree, opens files on click, and shows a folder visibility button beside folders. By default, folders hidden through NAssistant remain visible there in a dimmed state while the normal VS Code Explorer hides them.
+
+Use the Explorer tab search field to narrow visible items by name or path. The options button beside search controls whether NAssistant-hidden folders stay visible in this tree and lets you switch the Explorer sort order.
 
 ### Paste Context to Assistant
 

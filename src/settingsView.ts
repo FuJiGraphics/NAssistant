@@ -11,8 +11,12 @@ import type { NAssistantState, NAssistantTab } from './appState';
 import { copyFileReferenceForAi, openShortcutEditor, pasteContextToAssistant } from './commands';
 import { CONFIG_SECTION } from './constants';
 import {
+  type ExplorerSortMode,
   type ExplorerNode,
   createExplorerState,
+  getExplorerShowHiddenFoldersSetting,
+  getExplorerSortModeSetting,
+  isExplorerSortMode,
   readExplorerChildren
 } from './explorerTree';
 import {
@@ -72,6 +76,7 @@ type NAssistantMessage =
       parentUri: string;
       name: string;
       kind: ExplorerCreateKind;
+      expandedUris?: string[];
     }
   | {
       type: 'renameExplorerItem';
@@ -98,6 +103,14 @@ type NAssistantMessage =
     }
   | {
       type: 'refreshExplorer';
+    }
+  | {
+      type: 'setExplorerShowHiddenFolders';
+      showHiddenFolders: boolean;
+    }
+  | {
+      type: 'setExplorerSortMode';
+      sortMode: ExplorerSortMode;
     }
   | {
       type: 'toggleFeature';
@@ -210,6 +223,7 @@ export class SettingsViewProvider implements vscode.WebviewViewProvider, vscode.
         return;
 
       case 'createExplorerItem':
+        this.rememberExplorerExpansions(message.expandedUris);
         await this.createExplorerItem(message.parentUri, message.name, message.kind);
         return;
 
@@ -238,6 +252,14 @@ export class SettingsViewProvider implements vscode.WebviewViewProvider, vscode.
         this.explorerChildrenByParentUri.clear();
         this.expansionRequestVersions.clear();
         await this.refreshExplorerData();
+        return;
+
+      case 'setExplorerShowHiddenFolders':
+        await this.updateExplorerShowHiddenFolders(message.showHiddenFolders);
+        return;
+
+      case 'setExplorerSortMode':
+        await this.updateExplorerSortMode(message.sortMode);
         return;
 
       case 'toggleFeature':
@@ -278,6 +300,20 @@ export class SettingsViewProvider implements vscode.WebviewViewProvider, vscode.
       .update(ASSISTANT_TARGET_SETTING, target, ConfigurationTarget.Global);
     this.postState();
     showStatusMessage(`NAssistant: Paste target set to ${getAssistantTargetLabel(target)}.`, 2000);
+  }
+
+  private async updateExplorerShowHiddenFolders(showHiddenFolders: boolean): Promise<void> {
+    await workspace
+      .getConfiguration(CONFIG_SECTION)
+      .update(getExplorerShowHiddenFoldersSetting(), showHiddenFolders, ConfigurationTarget.Global);
+    this.postState();
+  }
+
+  private async updateExplorerSortMode(sortMode: ExplorerSortMode): Promise<void> {
+    await workspace
+      .getConfiguration(CONFIG_SECTION)
+      .update(getExplorerSortModeSetting(), sortMode, ConfigurationTarget.Global);
+    this.postState();
   }
 
   private async updateExplorerExpansion(uri: string, expanded: boolean): Promise<void> {
@@ -348,6 +384,12 @@ export class SettingsViewProvider implements vscode.WebviewViewProvider, vscode.
     if (createdUri) {
       this.expandedExplorerUris.add(parentUri);
       await this.refreshExplorerData();
+    }
+  }
+
+  private rememberExplorerExpansions(expandedUris?: readonly string[]): void {
+    for (const uri of expandedUris ?? []) {
+      this.expandedExplorerUris.add(uri);
     }
   }
 
@@ -488,6 +530,12 @@ function isNAssistantMessage(message: unknown): message is NAssistantMessage {
     case 'refreshExplorer':
       return true;
 
+    case 'setExplorerShowHiddenFolders':
+      return typeof candidate.showHiddenFolders === 'boolean';
+
+    case 'setExplorerSortMode':
+      return isExplorerSortMode(candidate.sortMode);
+
     case 'setActiveTab':
       return isNAssistantTab(candidate.tab);
 
@@ -510,7 +558,8 @@ function isNAssistantMessage(message: unknown): message is NAssistantMessage {
       return (
         typeof candidate.parentUri === 'string' &&
         typeof candidate.name === 'string' &&
-        isExplorerCreateKind(candidate.kind)
+        isExplorerCreateKind(candidate.kind) &&
+        isOptionalStringArray(candidate.expandedUris)
       );
 
     case 'renameExplorerItem':
@@ -564,4 +613,8 @@ function isExternalDroppedFile(value: unknown): value is ExternalDroppedFile {
   const candidate = value as Partial<ExternalDroppedFile>;
 
   return typeof candidate.name === 'string' && typeof candidate.data === 'string';
+}
+
+function isOptionalStringArray(value: unknown): value is string[] | undefined {
+  return value === undefined || (Array.isArray(value) && value.every((item) => typeof item === 'string'));
 }

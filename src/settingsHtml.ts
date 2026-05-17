@@ -28,6 +28,7 @@ export function createSettingsHtml(state: NAssistantState): string {
     }
 
     button,
+    input,
     select {
       font: inherit;
     }
@@ -146,6 +147,196 @@ export function createSettingsHtml(state: NAssistantState): string {
     .tree {
       min-width: 0;
       user-select: none;
+    }
+
+    .explorerTools {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 6px 7px;
+      border-bottom: 1px solid var(--vscode-panel-border);
+      background: var(--vscode-sideBar-background);
+    }
+
+    .searchBox {
+      position: relative;
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+
+    .searchIcon {
+      position: absolute;
+      left: 8px;
+      top: 50%;
+      width: 10px;
+      height: 10px;
+      border: 1.5px solid var(--vscode-descriptionForeground);
+      border-radius: 999px;
+      pointer-events: none;
+      transform: translateY(-56%);
+    }
+
+    .searchIcon::after {
+      content: "";
+      position: absolute;
+      right: -4px;
+      bottom: -3px;
+      width: 5px;
+      height: 1.5px;
+      border-radius: 999px;
+      background: var(--vscode-descriptionForeground);
+      transform: rotate(45deg);
+      transform-origin: left center;
+    }
+
+    .filterInput {
+      min-width: 0;
+      width: 100%;
+      min-height: 26px;
+      border: 1px solid var(--vscode-input-border, var(--vscode-panel-border));
+      border-radius: 6px;
+      color: var(--vscode-input-foreground);
+      background: var(--vscode-input-background);
+      padding: 3px 7px 3px 25px;
+    }
+
+    .filterInput:focus {
+      border-color: var(--vscode-focusBorder);
+    }
+
+    .toolButton {
+      position: relative;
+      flex: 0 0 auto;
+      width: 32px;
+      height: 26px;
+      border: 1px solid var(--vscode-button-border, var(--vscode-panel-border));
+      border-radius: 6px;
+      color: var(--vscode-button-secondaryForeground);
+      background: var(--vscode-button-secondaryBackground);
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .toolButton:hover,
+    .toolButton.isActive {
+      background: var(--vscode-button-secondaryHoverBackground);
+    }
+
+    .optionsButton::before,
+    .optionsButton::after,
+    .optionsButton .optionLine {
+      content: "";
+      position: absolute;
+      left: 9px;
+      width: 13px;
+      height: 1px;
+      background: currentColor;
+    }
+
+    .optionsButton::before {
+      top: 8px;
+    }
+
+    .optionsButton .optionLine {
+      top: 13px;
+    }
+
+    .optionsButton::after {
+      top: 18px;
+    }
+
+    .explorerOptions {
+      position: fixed;
+      z-index: 20;
+      width: 188px;
+      max-width: calc(100vw - 12px);
+      border: 1px solid var(--vscode-panel-border);
+      border-radius: 7px;
+      background: var(--vscode-editor-background);
+      box-shadow: 0 4px 14px rgb(0 0 0 / 28%);
+      padding: 6px;
+    }
+
+    .explorerOptions[hidden] {
+      display: none;
+    }
+
+    .optionRow,
+    .optionField {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .optionRow {
+      min-height: 24px;
+      padding: 2px 0;
+    }
+
+    .optionField {
+      margin-top: 5px;
+    }
+
+    .optionLabel {
+      flex: 0 0 auto;
+      color: var(--vscode-descriptionForeground);
+      font-size: 11px;
+    }
+
+    .optionCheck {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      margin: 0;
+      opacity: 0;
+    }
+
+    .switchTrack {
+      position: relative;
+      flex: 0 0 auto;
+      width: 30px;
+      height: 16px;
+      border: 1px solid var(--vscode-input-border, var(--vscode-panel-border));
+      border-radius: 999px;
+      background: var(--vscode-input-background);
+    }
+
+    .switchTrack::after {
+      content: "";
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: var(--vscode-descriptionForeground);
+      transition: transform 120ms ease, background 120ms ease;
+    }
+
+    .optionCheck:checked + .switchTrack {
+      border-color: var(--vscode-focusBorder);
+      background: color-mix(in srgb, var(--vscode-button-background) 70%, transparent);
+    }
+
+    .optionCheck:checked + .switchTrack::after {
+      background: var(--vscode-button-foreground);
+      transform: translateX(14px);
+    }
+
+    .optionSelect {
+      min-width: 0;
+      flex: 1 1 auto;
+      min-height: 24px;
+      border: 1px solid var(--vscode-dropdown-border, var(--vscode-input-border, var(--vscode-panel-border)));
+      border-radius: 6px;
+      color: var(--vscode-dropdown-foreground, var(--vscode-foreground));
+      background: var(--vscode-dropdown-background, var(--vscode-input-background));
+      padding: 2px 6px;
     }
 
     .treeRow {
@@ -589,6 +780,9 @@ export function createSettingsHtml(state: NAssistantState): string {
 
     .toggle:focus-visible,
     .actionButton:focus-visible,
+    .filterInput:focus-visible,
+    .optionSelect:focus-visible,
+    .toolButton:focus-visible,
     .targetSelect:focus-visible,
     .tabButton:focus-visible,
     .treeRow:focus-visible,
@@ -596,6 +790,11 @@ export function createSettingsHtml(state: NAssistantState): string {
     .nodeActionButton:focus-visible {
       outline: 1px solid var(--vscode-focusBorder);
       outline-offset: 1px;
+    }
+
+    .optionCheck:focus-visible + .switchTrack {
+      outline: 1px solid var(--vscode-focusBorder);
+      outline-offset: 2px;
     }
 
     .disabled {
@@ -617,6 +816,31 @@ export function createSettingsHtml(state: NAssistantState): string {
     </nav>
 
     <section class="panel" id="explorerPanel" aria-label="Explorer">
+      <div class="explorerTools">
+        <div class="searchBox">
+          <span class="searchIcon" aria-hidden="true"></span>
+          <input class="filterInput" id="explorerFilterInput" type="search" placeholder="Search" aria-label="Search Explorer">
+        </div>
+        <button class="toolButton optionsButton" id="explorerOptionsButton" type="button" data-action="toggle-explorer-options" title="Explorer Options" aria-label="Explorer Options" aria-expanded="false">
+          <span class="optionLine" aria-hidden="true"></span>
+        </button>
+      </div>
+      <div class="explorerOptions" id="explorerOptionsPanel" role="dialog" aria-label="Explorer Options" hidden>
+        <label class="optionRow">
+          <input class="optionCheck" id="explorerShowHiddenInput" type="checkbox" data-action="toggle-explorer-show-hidden">
+          <span>Show hidden</span>
+          <span class="switchTrack" aria-hidden="true"></span>
+        </label>
+        <label class="optionField">
+          <span class="optionLabel">Sort</span>
+          <select class="optionSelect" id="explorerSortSelect" data-action="select-explorer-sort" aria-label="Explorer sort order">
+            <option value="default">Default</option>
+            <option value="nameAsc">Name A-Z</option>
+            <option value="nameDesc">Name Z-A</option>
+            <option value="type">Type</option>
+          </select>
+        </label>
+      </div>
       <div class="tree" id="explorerTree" role="tree"></div>
     </section>
 
@@ -639,6 +863,11 @@ export function createSettingsHtml(state: NAssistantState): string {
     const settingsPanel = document.getElementById('settingsPanel');
     const explorerTree = document.getElementById('explorerTree');
     const explorerContextMenu = document.getElementById('explorerContextMenu');
+    const explorerFilterInput = document.getElementById('explorerFilterInput');
+    const explorerOptionsButton = document.getElementById('explorerOptionsButton');
+    const explorerOptionsPanel = document.getElementById('explorerOptionsPanel');
+    const explorerShowHiddenInput = document.getElementById('explorerShowHiddenInput');
+    const explorerSortSelect = document.getElementById('explorerSortSelect');
     const featureList = document.getElementById('featureList');
     const featureCount = document.getElementById('featureCount');
     const tabButtons = Array.from(document.querySelectorAll('[data-action="tab"]'));
@@ -648,6 +877,7 @@ export function createSettingsHtml(state: NAssistantState): string {
     let inlineEdit = undefined;
     let dropTargetUri = undefined;
     let ignoredToggleClickUri = undefined;
+    let explorerFilterText = '';
     const optimisticExpandedByUri = new Map();
     const treeModelByUri = new Map();
     const treeChildrenByUri = new Map();
@@ -655,13 +885,67 @@ export function createSettingsHtml(state: NAssistantState): string {
     let visibleRows = [];
 
     document.addEventListener('change', (event) => {
-      const target = event.target instanceof HTMLSelectElement ? event.target : undefined;
+      const selectTarget = event.target instanceof HTMLSelectElement ? event.target : undefined;
+      const checkboxTarget = event.target instanceof HTMLInputElement && event.target.type === 'checkbox'
+        ? event.target
+        : undefined;
 
-      if (target?.dataset.action === 'select-target') {
+      if (selectTarget?.dataset.action === 'select-target') {
         vscode.postMessage({
           type: 'setAssistantTarget',
-          target: target.value
+          target: selectTarget.value
         });
+        return;
+      }
+
+      if (selectTarget?.dataset.action === 'select-explorer-sort') {
+        vscode.postMessage({
+          type: 'setExplorerSortMode',
+          sortMode: selectTarget.value
+        });
+        return;
+      }
+
+      if (checkboxTarget?.dataset.action === 'toggle-explorer-show-hidden') {
+        vscode.postMessage({
+          type: 'setExplorerShowHiddenFolders',
+          showHiddenFolders: checkboxTarget.checked
+        });
+      }
+    });
+
+    explorerFilterInput.addEventListener('input', () => {
+      explorerFilterText = explorerFilterInput.value;
+      renderExplorer();
+    });
+
+    document.addEventListener('pointerdown', (event) => {
+      if (!isExplorerOptionsEventTarget(event.target)) {
+        hideExplorerOptions();
+      }
+
+      if (!isExplorerContextMenuEventTarget(event.target)) {
+        hideContextMenu();
+      }
+    });
+
+    document.addEventListener('focusin', (event) => {
+      if (!isExplorerOptionsEventTarget(event.target)) {
+        hideExplorerOptions();
+      }
+
+      if (!isExplorerContextMenuEventTarget(event.target)) {
+        hideContextMenu();
+      }
+    });
+
+    window.addEventListener('blur', () => {
+      hideExplorerTransientPanels();
+    });
+
+    window.addEventListener('resize', () => {
+      if (!explorerOptionsPanel.hidden) {
+        positionExplorerOptionsPanel();
       }
     });
 
@@ -727,10 +1011,6 @@ export function createSettingsHtml(state: NAssistantState): string {
       const source = event.target instanceof Element ? event.target : event.target?.parentElement;
       const target = source?.closest('[data-action]');
 
-      if (!source?.closest('#explorerContextMenu')) {
-        hideContextMenu();
-      }
-
       if (!target) {
         handleExplorerRowClick(source, event);
         return;
@@ -747,6 +1027,11 @@ export function createSettingsHtml(state: NAssistantState): string {
           type: 'setActiveTab',
           tab: target.dataset.tab
         });
+        return;
+      }
+
+      if (action === 'toggle-explorer-options') {
+        toggleExplorerOptions();
         return;
       }
 
@@ -988,12 +1273,26 @@ export function createSettingsHtml(state: NAssistantState): string {
     });
 
     document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && hideExplorerTransientPanels()) {
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
+
       const inlineTarget = event.target instanceof HTMLInputElement && event.target.dataset.inlineName === 'true'
         ? event.target
         : undefined;
 
       if (inlineTarget) {
         handleInlineNameKeydown(event, inlineTarget);
+        return;
+      }
+
+      if (
+        event.target instanceof HTMLInputElement ||
+        event.target instanceof HTMLSelectElement ||
+        event.target instanceof HTMLTextAreaElement
+      ) {
         return;
       }
 
@@ -1095,8 +1394,94 @@ export function createSettingsHtml(state: NAssistantState): string {
       renderSettings();
     }
 
+    function syncExplorerControls(explorer) {
+      const options = explorer.options || getFallbackExplorerOptions();
+
+      if (explorerFilterInput.value !== explorerFilterText) {
+        explorerFilterInput.value = explorerFilterText;
+      }
+
+      explorerShowHiddenInput.checked = Boolean(options.showHiddenFolders);
+      explorerSortSelect.value = getExplorerSortMode();
+    }
+
+    function toggleExplorerOptions() {
+      const shouldOpen = explorerOptionsPanel.hidden;
+
+      hideContextMenu();
+
+      if (!shouldOpen) {
+        hideExplorerOptions();
+        return;
+      }
+
+      explorerOptionsPanel.hidden = false;
+      explorerOptionsButton.classList.add('isActive');
+      explorerOptionsButton.setAttribute('aria-expanded', 'true');
+      positionExplorerOptionsPanel();
+    }
+
+    function hideExplorerOptions() {
+      const wasOpen = !explorerOptionsPanel.hidden;
+
+      explorerOptionsPanel.hidden = true;
+      explorerOptionsButton.classList.remove('isActive');
+      explorerOptionsButton.setAttribute('aria-expanded', 'false');
+
+      return wasOpen;
+    }
+
+    function positionExplorerOptionsPanel() {
+      const buttonRect = explorerOptionsButton.getBoundingClientRect();
+
+      explorerOptionsPanel.style.left = '0px';
+      explorerOptionsPanel.style.top = '0px';
+
+      const panelWidth = explorerOptionsPanel.offsetWidth;
+      const panelHeight = explorerOptionsPanel.offsetHeight;
+      const left = Math.max(4, Math.min(
+        buttonRect.right - panelWidth,
+        window.innerWidth - panelWidth - 4
+      ));
+      const top = Math.max(4, Math.min(
+        buttonRect.bottom + 4,
+        window.innerHeight - panelHeight - 4
+      ));
+
+      explorerOptionsPanel.style.left = left + 'px';
+      explorerOptionsPanel.style.top = top + 'px';
+    }
+
+    function isExplorerOptionsEventTarget(target) {
+      const source = target instanceof Element ? target : target?.parentElement;
+
+      return Boolean(source?.closest('#explorerOptionsPanel') || source?.closest('#explorerOptionsButton'));
+    }
+
+    function isExplorerContextMenuEventTarget(target) {
+      const source = target instanceof Element ? target : target?.parentElement;
+
+      return Boolean(source?.closest('#explorerContextMenu'));
+    }
+
+    function hideExplorerTransientPanels() {
+      const hidOptions = hideExplorerOptions();
+      const hidContextMenu = hideContextMenu();
+
+      return hidOptions || hidContextMenu;
+    }
+
     function renderExplorer() {
-      const explorer = state.explorer || { roots: [], children: {}, workspaceFolderCount: 0, hiddenFolderCount: 0, expandMode: 'singleClick' };
+      const explorer = state.explorer || {
+        roots: [],
+        children: {},
+        workspaceFolderCount: 0,
+        hiddenFolderCount: 0,
+        expandMode: 'singleClick',
+        options: getFallbackExplorerOptions()
+      };
+
+      syncExplorerControls(explorer);
 
       if (!explorer.workspaceFolderCount) {
         selectedExplorerUris = [];
@@ -1150,8 +1535,17 @@ export function createSettingsHtml(state: NAssistantState): string {
     function buildVisibleRows() {
       const rows = [];
 
-      for (const uri of treeRootUris) {
+      for (const uri of getSortedExplorerUris(treeRootUris)) {
         appendVisibleNodeRows(uri, 0, rows);
+      }
+
+      if (rows.length === 0) {
+        rows.push({
+          key: 'message:empty',
+          kind: 'message',
+          message: getExplorerFilterText() ? 'No search results.' : 'No items.',
+          depth: 0
+        });
       }
 
       return rows;
@@ -1160,7 +1554,7 @@ export function createSettingsHtml(state: NAssistantState): string {
     function appendVisibleNodeRows(uri, depth, rows) {
       const node = treeModelByUri.get(uri);
 
-      if (!node) {
+      if (!node || !shouldShowExplorerNode(uri)) {
         return;
       }
 
@@ -1195,7 +1589,7 @@ export function createSettingsHtml(state: NAssistantState): string {
         return;
       }
 
-      const childUris = treeChildrenByUri.get(uri) || [];
+      const childUris = getVisibleExplorerChildUris(uri);
 
       if (childUris.length === 0) {
         rows.push({
@@ -1210,6 +1604,125 @@ export function createSettingsHtml(state: NAssistantState): string {
       for (const childUri of childUris) {
         appendVisibleNodeRows(childUri, depth + 1, rows);
       }
+    }
+
+    function getVisibleExplorerChildUris(parentUri) {
+      return getSortedExplorerUris(treeChildrenByUri.get(parentUri) || [])
+        .filter((uri) => shouldShowExplorerNode(uri));
+    }
+
+    function shouldShowExplorerNode(uri) {
+      const node = treeModelByUri.get(uri);
+
+      if (!node) {
+        return false;
+      }
+
+      if (!getExplorerShowHiddenFolders() && node.isHiddenByNAssistant) {
+        return false;
+      }
+
+      if (!getExplorerFilterText()) {
+        return true;
+      }
+
+      if (matchesExplorerFilter(node)) {
+        return true;
+      }
+
+      return (treeChildrenByUri.get(uri) || []).some((childUri) => shouldShowExplorerNode(childUri));
+    }
+
+    function matchesExplorerFilter(node) {
+      const filterText = getExplorerFilterText();
+
+      return normalizeFilterText(node.name).includes(filterText) ||
+        normalizeFilterText(node.relativePath || '').includes(filterText);
+    }
+
+    function getSortedExplorerUris(uris) {
+      return [...uris].sort((leftUri, rightUri) => {
+        const left = treeModelByUri.get(leftUri);
+        const right = treeModelByUri.get(rightUri);
+
+        if (!left || !right) {
+          return leftUri.localeCompare(rightUri);
+        }
+
+        return compareExplorerNodes(left, right);
+      });
+    }
+
+    function compareExplorerNodes(left, right) {
+      const sortMode = getExplorerSortMode();
+
+      if (sortMode === 'default') {
+        return compareExplorerTypes(left, right) || compareExplorerNames(left, right, 'asc');
+      }
+
+      if (sortMode === 'nameDesc') {
+        return compareExplorerNames(left, right, 'desc');
+      }
+
+      if (sortMode === 'type') {
+        return compareExplorerTypes(left, right) ||
+          compareExplorerExtensions(left, right) ||
+          compareExplorerNames(left, right, 'asc');
+      }
+
+      return compareExplorerNames(left, right, 'asc');
+    }
+
+    function compareExplorerTypes(left, right) {
+      if (left.type === right.type) {
+        return 0;
+      }
+
+      return left.type === 'folder' ? -1 : 1;
+    }
+
+    function compareExplorerNames(left, right, direction) {
+      const result = left.name.localeCompare(right.name, undefined, {
+        numeric: true,
+        sensitivity: 'base'
+      });
+
+      return direction === 'desc' ? -result : result;
+    }
+
+    function compareExplorerExtensions(left, right) {
+      return getExplorerExtension(left).localeCompare(getExplorerExtension(right), undefined, {
+        numeric: true,
+        sensitivity: 'base'
+      });
+    }
+
+    function getExplorerExtension(node) {
+      if (node.type === 'folder') {
+        return '';
+      }
+
+      const dotIndex = node.name.lastIndexOf('.');
+
+      return dotIndex > 0 ? node.name.slice(dotIndex + 1) : '';
+    }
+
+    function getExplorerShowHiddenFolders() {
+      return state.explorer?.options?.showHiddenFolders !== false;
+    }
+
+    function getExplorerSortMode() {
+      const sortMode = state.explorer?.options?.sortMode;
+
+      return ['default', 'nameAsc', 'nameDesc', 'type'].includes(sortMode) ? sortMode : 'default';
+    }
+
+    function getExplorerFilterText() {
+      return normalizeFilterText(explorerFilterText);
+    }
+
+    function normalizeFilterText(value) {
+      return String(value || '').trim().toLowerCase();
     }
 
     function renderVisibleRowsDiff() {
@@ -1291,6 +1804,10 @@ export function createSettingsHtml(state: NAssistantState): string {
         return renderEmptyExplorerRow(row.depth, row.key);
       }
 
+      if (row.kind === 'message') {
+        return renderMessageExplorerRow(row.message, row.key);
+      }
+
       if (row.kind === 'inline-create') {
         return renderInlineCreateInput(row.depth);
       }
@@ -1300,7 +1817,7 @@ export function createSettingsHtml(state: NAssistantState): string {
 
     function getVisibleRowSignature(row) {
       if (row.kind !== 'node') {
-        return row.kind + ':' + row.depth + ':' + row.key + ':' + (inlineEdit?.kind || '');
+        return row.kind + ':' + row.depth + ':' + row.key + ':' + (row.message || '') + ':' + (inlineEdit?.kind || '');
       }
 
       const node = row.node;
@@ -1393,7 +1910,7 @@ export function createSettingsHtml(state: NAssistantState): string {
         ? renderInlineCreateInput(depth)
         : '';
 
-      const children = childUris
+      const children = getVisibleExplorerChildUris(node.uri)
         .map((uri) => treeModelByUri.get(uri))
         .filter(Boolean);
 
@@ -1424,6 +1941,10 @@ export function createSettingsHtml(state: NAssistantState): string {
         '</div>' +
         '<div class="rowActions" aria-hidden="true"></div>' +
       '</div>';
+    }
+
+    function renderMessageExplorerRow(message, rowKey = '') {
+      return '<div class="emptyState" role="presentation" data-row-key="' + escapeHtml(rowKey) + '">' + escapeHtml(message) + '</div>';
     }
 
     function renderNodeActions(node) {
@@ -1945,6 +2466,7 @@ export function createSettingsHtml(state: NAssistantState): string {
         items.push(renderContextMenuButton('toggle-hidden', node.isHiddenByNAssistant ? 'Show in VS Code Explorer' : 'Hide from VS Code Explorer'));
       }
 
+      hideExplorerOptions();
       explorerContextMenu.innerHTML = items.join('');
       explorerContextMenu.hidden = false;
       explorerContextMenu.style.left = '0px';
@@ -1966,8 +2488,12 @@ export function createSettingsHtml(state: NAssistantState): string {
     }
 
     function hideContextMenu() {
+      const wasOpen = !explorerContextMenu.hidden;
+
       explorerContextMenu.hidden = true;
       explorerContextMenu.innerHTML = '';
+
+      return wasOpen;
     }
 
     function runContextCommand(command) {
@@ -2108,6 +2634,7 @@ export function createSettingsHtml(state: NAssistantState): string {
       }
 
       const edit = inlineEdit;
+      const expandedUris = getExpandedExplorerUrisForMessage();
 
       inlineEdit = undefined;
 
@@ -2116,7 +2643,8 @@ export function createSettingsHtml(state: NAssistantState): string {
           type: 'createExplorerItem',
           parentUri: edit.parentUri,
           name,
-          kind: edit.kind
+          kind: edit.kind,
+          expandedUris
         });
       }
 
@@ -2128,7 +2656,13 @@ export function createSettingsHtml(state: NAssistantState): string {
         });
       }
 
-      renderExplorer();
+      renderVisibleRowsDiff();
+    }
+
+    function getExpandedExplorerUrisForMessage() {
+      return getVisibleExplorerNodes()
+        .filter((node) => node.type === 'folder' && getEffectiveExpanded(node))
+        .map((node) => node.uri);
     }
 
     function postDeleteSelected() {
@@ -2287,6 +2821,13 @@ export function createSettingsHtml(state: NAssistantState): string {
           { target: 'claude', label: 'Claude (Default)' },
           { target: 'codex', label: 'Codex' }
         ]
+      };
+    }
+
+    function getFallbackExplorerOptions() {
+      return {
+        showHiddenFolders: true,
+        sortMode: 'default'
       };
     }
 

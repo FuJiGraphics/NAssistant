@@ -12,6 +12,17 @@ import {
   normalizeGlobPath
 } from './folderVisibility';
 import type { ExplorerGitStatus, WorkspaceGitStatus } from './gitStatus';
+import { CONFIG_SECTION } from './constants';
+
+const EXPLORER_SHOW_HIDDEN_FOLDERS_SETTING = 'explorer.showHiddenFolders';
+const EXPLORER_SORT_MODE_SETTING = 'explorer.sortMode';
+
+export type ExplorerSortMode = 'default' | 'nameAsc' | 'nameDesc' | 'type';
+
+export interface ExplorerOptions {
+  showHiddenFolders: boolean;
+  sortMode: ExplorerSortMode;
+}
 
 export interface ExplorerState {
   roots: ExplorerNode[];
@@ -19,6 +30,7 @@ export interface ExplorerState {
   workspaceFolderCount: number;
   hiddenFolderCount: number;
   expandMode: 'singleClick' | 'doubleClick';
+  options: ExplorerOptions;
 }
 
 export interface ExplorerNode {
@@ -65,8 +77,30 @@ export function createExplorerState(
     children,
     workspaceFolderCount: workspaceFolders.length,
     hiddenFolderCount: getHiddenFolderCount(workspaceFolders),
-    expandMode: getTreeExpandMode()
+    expandMode: getTreeExpandMode(),
+    options: getExplorerOptions()
   };
+}
+
+export function getExplorerOptions(): ExplorerOptions {
+  const configuration = workspace.getConfiguration(CONFIG_SECTION);
+
+  return {
+    showHiddenFolders: configuration.get<boolean>(EXPLORER_SHOW_HIDDEN_FOLDERS_SETTING, true),
+    sortMode: getConfiguredExplorerSortMode()
+  };
+}
+
+export function isExplorerSortMode(value: unknown): value is ExplorerSortMode {
+  return value === 'default' || value === 'nameAsc' || value === 'nameDesc' || value === 'type';
+}
+
+export function getExplorerShowHiddenFoldersSetting(): string {
+  return EXPLORER_SHOW_HIDDEN_FOLDERS_SETTING;
+}
+
+export function getExplorerSortModeSetting(): string {
+  return EXPLORER_SORT_MODE_SETTING;
 }
 
 function getTreeExpandMode(): ExplorerState['expandMode'] {
@@ -75,6 +109,14 @@ function getTreeExpandMode(): ExplorerState['expandMode'] {
     .get<string>('tree.expandMode', 'singleClick');
 
   return configuredMode === 'doubleClick' ? 'doubleClick' : 'singleClick';
+}
+
+function getConfiguredExplorerSortMode(): ExplorerSortMode {
+  const configuredMode = workspace
+    .getConfiguration(CONFIG_SECTION)
+    .get<string>(EXPLORER_SORT_MODE_SETTING, 'default');
+
+  return isExplorerSortMode(configuredMode) ? configuredMode : 'default';
 }
 
 export async function readExplorerChildren(

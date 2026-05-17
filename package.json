@@ -152,6 +152,28 @@
           "default": "claude",
           "description": "Assistant target used by the default Paste Context to Assistant command."
         },
+        "nassistant.explorer.showHiddenFolders": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show folders hidden through NAssistant in the NAssistant Activity Bar Explorer."
+        },
+        "nassistant.explorer.sortMode": {
+          "type": "string",
+          "enum": [
+            "default",
+            "nameAsc",
+            "nameDesc",
+            "type"
+          ],
+          "enumItemLabels": [
+            "Default",
+            "Name A-Z",
+            "Name Z-A",
+            "Type"
+          ],
+          "default": "default",
+          "description": "Sort order used by the NAssistant Activity Bar Explorer."
+        },
         "nassistant.hiddenExplorerFolders": {
           "type": "array",
           "scope": "resource",

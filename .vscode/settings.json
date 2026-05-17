@@ -1,0 +1,31 @@
+{
+    "files.exclude": {
+        "media": true,
+        "node_modules": true,
+        "out": true,
+        ".vscode": true,
+        "src": true
+    },
+    "nassistant.hiddenExplorerFolders": [
+        {
+            "path": "media",
+            "pattern": "media"
+        },
+        {
+            "path": "node_modules",
+            "pattern": "node_modules"
+        },
+        {
+            "path": "out",
+            "pattern": "out"
+        },
+        {
+            "path": ".vscode",
+            "pattern": ".vscode"
+        },
+        {
+            "path": "src",
+            "pattern": "src"
+        }
+    ]
+}
