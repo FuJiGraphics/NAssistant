@@ -28,6 +28,7 @@ export function activate(context: vscode.ExtensionContext): void {
     commands.registerCommand(COMMANDS.pasteContextToClaude, pasteContextToClaude),
     commands.registerCommand(COMMANDS.pasteContextToCodex, pasteContextToCodex),
     commands.registerCommand(COMMANDS.showHiddenExplorerFolders, showHiddenExplorerFolders),
+    // Refresh webview on NAssistant config, files.exclude (folder hiding), or workbench.tree.expandMode changes.
     workspace.onDidChangeConfiguration((event) => {
       if (
         event.affectsConfiguration(CONFIG_SECTION) ||

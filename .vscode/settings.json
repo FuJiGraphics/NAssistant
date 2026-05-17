@@ -1,10 +1,39 @@
 {
     "nassistant.explorer.folderIcons": [
         {
+            "path": "node_modules/lucide-static",
+            "icon": "folder",
+            "color": "muted"
+        },
+        {
+            "path": "node_modules/balanced-match",
+            "icon": "folder",
+            "color": "muted"
+        },
+        {
+            "path": "node_modules/brace-expansion",
+            "icon": "folder",
+            "color": "muted"
+        },
+        {
+            "path": "src",
+            "icon": "folder",
+            "color": "muted"
+        },
+        {
             "path": ".vscode",
             "icon": "folder",
-            "color": "green"
+            "color": "muted"
         }
     ],
-    "nassistant.explorer.hiddenFileExtensions": []
+    "nassistant.explorer.hiddenFileExtensions": [],
+    "files.exclude": {
+        "node_modules/undici-types": true
+    },
+    "nassistant.hiddenExplorerFolders": [
+        {
+            "path": "node_modules/undici-types",
+            "pattern": "node_modules/undici-types"
+        }
+    ]
 }

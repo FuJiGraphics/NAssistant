@@ -97,6 +97,8 @@ The target selector lives inside the `Paste Context to Assistant` card in the NA
 
 This command does not submit the message. It writes the generated context to the clipboard, opens the configured target, immediately asks VS Code to paste, and then clears the clipboard.
 
+> **주의**: 이 명령은 코드 본문을 OS 클립보드에 잠시 기록한 뒤 대상 확장에 페이스트하고 클립보드를 비웁니다. 이 짧은 구간 동안 클립보드 매니저(예: Paste, Maccy 등)가 가로채면 코드/경로가 그곳에 저장될 수 있습니다. 민감한 코드를 다룰 때는 클립보드 매니저 동작을 확인하세요.
+
 ## Planned Features
 
 ### Copy Open Editors Context

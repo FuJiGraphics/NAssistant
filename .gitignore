@@ -4,4 +4,4 @@ out/
 *.vsix
 *.log
 .vsix-stage*/
-
+.vscode/settings.json
