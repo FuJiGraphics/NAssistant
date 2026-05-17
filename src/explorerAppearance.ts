@@ -1,3 +1,49 @@
+import {
+  Atom,
+  Blocks,
+  BookOpen,
+  Bug,
+  CircuitBoard,
+  Cloud,
+  CloudCog,
+  CloudUpload,
+  Code,
+  Command,
+  Component,
+  Container,
+  Cpu,
+  Database,
+  FileCode,
+  FlaskConical,
+  Folder,
+  FolderGit,
+  Frame,
+  Globe,
+  Hammer,
+  HardDrive,
+  Image,
+  Kanban,
+  Key,
+  Layers,
+  LayoutDashboard,
+  Monitor,
+  Network,
+  Package,
+  Palette,
+  Plug,
+  Rocket,
+  Route,
+  Server,
+  ServerCog,
+  Settings,
+  Shield,
+  SlidersHorizontal,
+  Sparkles,
+  SquareTerminal,
+  Workflow,
+  Wrench,
+  Zap
+} from 'lucide-static';
 import { workspace } from 'vscode';
 
 import { CONFIG_SECTION } from './constants';
@@ -11,6 +57,8 @@ export interface ExplorerIconPreset {
   id: string;
   label: string;
   text: string;
+  group?: 'default' | 'tech' | 'tools' | 'infra' | 'file';
+  svg?: string;
 }
 
 export interface ExplorerColorPreset {
@@ -39,6 +87,7 @@ export interface ExplorerNodeIcon {
   color: string;
   text: string;
   label: string;
+  svg?: string;
 }
 
 export interface FileExtensionRuleState {
@@ -60,36 +109,69 @@ const DEFAULT_FOLDER_ICON_ID = 'folder';
 export const DEFAULT_COLOR_ID = 'muted';
 
 export const ICON_PRESETS: ExplorerIconPreset[] = [
-  { id: 'folder', label: 'Folder', text: 'DIR' },
-  { id: 'source', label: 'Source', text: 'SRC' },
-  { id: 'docs', label: 'Docs', text: 'DOC' },
-  { id: 'config', label: 'Config', text: 'CFG' },
-  { id: 'asset', label: 'Assets', text: 'AST' },
-  { id: 'package', label: 'Package', text: 'PKG' },
-  { id: 'test', label: 'Tests', text: 'TST' },
-  { id: 'ui', label: 'UI', text: 'UI' },
-  { id: 'api', label: 'API', text: 'API' },
-  { id: 'data', label: 'Data', text: 'DB' },
-  { id: 'build', label: 'Build Output', text: 'OUT' },
-  { id: 'ts', label: 'TypeScript', text: 'TS' },
-  { id: 'tsx', label: 'TypeScript React', text: 'TSX' },
-  { id: 'js', label: 'JavaScript', text: 'JS' },
-  { id: 'jsx', label: 'JavaScript React', text: 'JSX' },
-  { id: 'json', label: 'JSON', text: '{}' },
-  { id: 'md', label: 'Markdown', text: 'MD' },
-  { id: 'cs', label: 'C#', text: 'C#' },
-  { id: 'css', label: 'CSS', text: '#' },
-  { id: 'html', label: 'HTML', text: '<>' },
-  { id: 'yaml', label: 'YAML', text: 'YML' },
-  { id: 'xml', label: 'XML', text: 'XML' },
-  { id: 'py', label: 'Python', text: 'PY' },
-  { id: 'shell', label: 'Shell', text: 'SH' },
-  { id: 'text', label: 'Text', text: 'TXT' },
-  { id: 'image', label: 'Image', text: 'IMG' },
-  { id: 'archive', label: 'Archive', text: 'ZIP' },
-  { id: 'database', label: 'Database', text: 'DB' },
-  { id: 'lock', label: 'Lockfile', text: 'L' },
-  { id: 'file', label: 'File', text: 'F' }
+  { id: 'folder', label: 'Folder', text: 'DIR', group: 'default', svg: Folder },
+  { id: 'source', label: 'Source', text: 'SRC', group: 'default', svg: Code },
+  { id: 'docs', label: 'Docs', text: 'DOC', group: 'default', svg: BookOpen },
+  { id: 'config', label: 'Config', text: 'CFG', group: 'default', svg: Settings },
+  { id: 'repo', label: 'Repository', text: 'GIT', group: 'default', svg: FolderGit },
+  { id: 'terminal', label: 'Terminal', text: 'CLI', group: 'default', svg: SquareTerminal },
+  { id: 'components', label: 'Components', text: 'CMP', group: 'default', svg: Component },
+  { id: 'asset', label: 'Assets', text: 'AST', group: 'default', svg: Image },
+  { id: 'theme', label: 'Theme', text: 'THM', group: 'default', svg: Palette },
+  { id: 'web', label: 'Web', text: 'WEB', group: 'default', svg: Globe },
+  { id: 'package', label: 'Package', text: 'PKG', group: 'default', svg: Package },
+  { id: 'test', label: 'Tests', text: 'TST', group: 'default', svg: FlaskConical },
+  { id: 'security', label: 'Security', text: 'SEC', group: 'default', svg: Shield },
+  { id: 'secret', label: 'Secrets', text: 'KEY', group: 'default', svg: Key },
+  { id: 'ui', label: 'UI', text: 'UI', group: 'default', svg: LayoutDashboard },
+  { id: 'api', label: 'API', text: 'API', group: 'default', svg: Plug },
+  { id: 'data', label: 'Data', text: 'DB', group: 'default', svg: Database },
+  { id: 'build', label: 'Build Output', text: 'OUT', group: 'default', svg: Hammer },
+  { id: 'react', label: 'React', text: 'RX', group: 'tech', svg: Atom },
+  { id: 'vite', label: 'Vite', text: 'VIT', group: 'tech', svg: Zap },
+  { id: 'node-runtime', label: 'Node Runtime', text: 'NOD', group: 'tech', svg: Cpu },
+  { id: 'web-routes', label: 'Web Routes', text: 'RTE', group: 'tech', svg: Route },
+  { id: 'modules', label: 'Modules', text: 'MOD', group: 'tech', svg: Blocks },
+  { id: 'layers', label: 'Layers', text: 'LYR', group: 'tech', svg: Layers },
+  { id: 'code-files', label: 'Code Files', text: 'COD', group: 'tech', svg: FileCode },
+  { id: 'circuit', label: 'Circuit', text: 'CIR', group: 'tech', svg: CircuitBoard },
+  { id: 'workflow', label: 'Workflow', text: 'WFL', group: 'tech', svg: Workflow },
+  { id: 'spark', label: 'Spark', text: 'SPK', group: 'tech', svg: Sparkles },
+  { id: 'command', label: 'Command', text: 'CMD', group: 'tools', svg: Command },
+  { id: 'debug', label: 'Debug', text: 'DBG', group: 'tools', svg: Bug },
+  { id: 'maintenance', label: 'Maintenance', text: 'FIX', group: 'tools', svg: Wrench },
+  { id: 'board', label: 'Board', text: 'BRD', group: 'tools', svg: Kanban },
+  { id: 'launch', label: 'Launch', text: 'GO', group: 'tools', svg: Rocket },
+  { id: 'workspace', label: 'Workspace', text: 'WS', group: 'tools', svg: Monitor },
+  { id: 'design', label: 'Design', text: 'DSN', group: 'tools', svg: Frame },
+  { id: 'tuning', label: 'Tuning', text: 'TUN', group: 'tools', svg: SlidersHorizontal },
+  { id: 'containers', label: 'Containers', text: 'CTR', group: 'infra', svg: Container },
+  { id: 'server', label: 'Server', text: 'SRV', group: 'infra', svg: Server },
+  { id: 'server-config', label: 'Server Config', text: 'SCF', group: 'infra', svg: ServerCog },
+  { id: 'cloud', label: 'Cloud', text: 'CLD', group: 'infra', svg: Cloud },
+  { id: 'cloud-config', label: 'Cloud Config', text: 'CCF', group: 'infra', svg: CloudCog },
+  { id: 'deploy', label: 'Deploy', text: 'DPL', group: 'infra', svg: CloudUpload },
+  { id: 'storage', label: 'Storage', text: 'DSK', group: 'infra', svg: HardDrive },
+  { id: 'network', label: 'Network', text: 'NET', group: 'infra', svg: Network },
+  { id: 'ts', label: 'TypeScript', text: 'TS', group: 'file' },
+  { id: 'tsx', label: 'TypeScript React', text: 'TSX', group: 'file' },
+  { id: 'js', label: 'JavaScript', text: 'JS', group: 'file' },
+  { id: 'jsx', label: 'JavaScript React', text: 'JSX', group: 'file' },
+  { id: 'json', label: 'JSON', text: '{}', group: 'file' },
+  { id: 'md', label: 'Markdown', text: 'MD', group: 'file' },
+  { id: 'cs', label: 'C#', text: 'C#', group: 'file' },
+  { id: 'css', label: 'CSS', text: '#', group: 'file' },
+  { id: 'html', label: 'HTML', text: '<>', group: 'file' },
+  { id: 'yaml', label: 'YAML', text: 'YML', group: 'file' },
+  { id: 'xml', label: 'XML', text: 'XML', group: 'file' },
+  { id: 'py', label: 'Python', text: 'PY', group: 'file' },
+  { id: 'shell', label: 'Shell', text: 'SH', group: 'file' },
+  { id: 'text', label: 'Text', text: 'TXT', group: 'file' },
+  { id: 'image', label: 'Image', text: 'IMG', group: 'file' },
+  { id: 'archive', label: 'Archive', text: 'ZIP', group: 'file' },
+  { id: 'database', label: 'Database', text: 'DB', group: 'file' },
+  { id: 'lock', label: 'Lockfile', text: 'L', group: 'file' },
+  { id: 'file', label: 'File', text: 'F', group: 'file' }
 ];
 
 export const COLOR_PRESETS: ExplorerColorPreset[] = [
@@ -206,7 +288,8 @@ export function createExplorerAppearanceResolver(): ExplorerAppearanceResolver {
       icon: iconPreset.id,
       color: colorPreset.id,
       text: iconPreset.text,
-      label: iconPreset.label
+      label: iconPreset.label,
+      svg: iconPreset.svg
     };
   };
 
@@ -214,7 +297,7 @@ export function createExplorerAppearanceResolver(): ExplorerAppearanceResolver {
     getFolderIcon(relativePath) {
       const rule = folderRulesByPath.get(relativePath);
 
-      return resolveIcon(rule?.icon ?? DEFAULT_FOLDER_ICON_ID, rule?.color ?? 'blue');
+      return resolveIcon(rule?.icon ?? DEFAULT_FOLDER_ICON_ID, rule?.color ?? DEFAULT_COLOR_ID);
     },
     getFileIcon(name) {
       const extension = getFileExtension(name);
@@ -235,7 +318,7 @@ export function getFolderNodeIcon(relativePath: string): ExplorerNodeIcon {
 
   return createNodeIcon(
     rule?.icon ?? DEFAULT_FOLDER_ICON_ID,
-    rule?.color ?? 'blue'
+    rule?.color ?? DEFAULT_COLOR_ID
   );
 }
 
@@ -329,7 +412,8 @@ function createNodeIcon(icon: string, color: string): ExplorerNodeIcon {
     icon: iconPreset.id,
     color: colorPreset.id,
     text: iconPreset.text,
-    label: iconPreset.label
+    label: iconPreset.label,
+    svg: iconPreset.svg
   };
 }
 
