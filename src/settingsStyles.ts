@@ -441,13 +441,13 @@ export function createSettingsStyles(state: NAssistantState): string {
     .explorerOptions {
       position: fixed;
       z-index: 20;
-      width: 188px;
+      width: 214px;
       max-width: calc(100vw - 12px);
       border: 1px solid var(--vscode-panel-border);
-      border-radius: 7px;
-      background: var(--vscode-editor-background);
-      box-shadow: 0 4px 14px rgb(0 0 0 / 28%);
-      padding: 6px;
+      border-radius: 8px;
+      background: var(--vscode-menu-background, var(--vscode-editorWidget-background));
+      box-shadow: 0 8px 22px rgb(0 0 0 / 32%);
+      padding: 7px;
     }
 
     .explorerOptions[hidden] {
@@ -469,7 +469,7 @@ export function createSettingsStyles(state: NAssistantState): string {
     }
 
     .optionField {
-      margin-top: 5px;
+      margin-top: 7px;
     }
 
     .optionLabel {
@@ -520,15 +520,107 @@ export function createSettingsStyles(state: NAssistantState): string {
       transform: translateX(14px);
     }
 
-    .optionSelect {
+    .optionDropdown {
+      position: relative;
       min-width: 0;
       flex: 1 1 auto;
-      min-height: 24px;
+    }
+
+    .optionDropdownButton {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      width: 100%;
+      min-height: 28px;
       border: 1px solid var(--vscode-dropdown-border, var(--vscode-input-border, var(--vscode-panel-border)));
       border-radius: 6px;
       color: var(--vscode-dropdown-foreground, var(--vscode-foreground));
       background: var(--vscode-dropdown-background, var(--vscode-input-background));
-      padding: 2px 6px;
+      cursor: pointer;
+      padding: 3px 7px;
+      text-align: left;
+    }
+
+    .optionDropdownButton:hover,
+    .optionDropdownButton.isOpen {
+      border-color: var(--vscode-focusBorder);
+    }
+
+    .optionDropdownLabel {
+      overflow: hidden;
+      min-width: 0;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .optionDropdownChevron {
+      flex: 0 0 auto;
+      width: 10px;
+      height: 10px;
+      color: var(--vscode-descriptionForeground);
+    }
+
+    .optionDropdownChevron::before {
+      content: "";
+      display: block;
+      width: 5px;
+      height: 5px;
+      margin: 1px auto 0;
+      border-right: 1.5px solid currentColor;
+      border-bottom: 1.5px solid currentColor;
+      transform: rotate(45deg);
+    }
+
+    .optionDropdownMenu {
+      position: absolute;
+      z-index: 45;
+      left: 0;
+      right: 0;
+      top: calc(100% + 4px);
+      overflow: hidden;
+      border: 1px solid var(--vscode-dropdown-border, var(--vscode-panel-border));
+      border-radius: 7px;
+      color: var(--vscode-dropdown-foreground, var(--vscode-foreground));
+      background: var(--vscode-dropdown-background, var(--vscode-editorWidget-background));
+      box-shadow: 0 8px 18px rgb(0 0 0 / 30%);
+      padding: 3px;
+    }
+
+    .optionDropdownMenu[hidden] {
+      display: none;
+    }
+
+    .optionDropdownChoice {
+      display: grid;
+      grid-template-columns: 18px minmax(0, 1fr);
+      align-items: center;
+      gap: 4px;
+      width: 100%;
+      min-height: 27px;
+      border: 0;
+      border-radius: 5px;
+      color: inherit;
+      background: transparent;
+      cursor: pointer;
+      padding: 4px 7px 4px 5px;
+      text-align: left;
+    }
+
+    .optionDropdownChoice:hover,
+    .optionDropdownChoice.isSelected {
+      color: var(--vscode-list-activeSelectionForeground, var(--vscode-foreground));
+      background: var(--vscode-list-activeSelectionBackground, var(--vscode-list-hoverBackground));
+    }
+
+    .optionDropdownCheck {
+      display: inline-grid;
+      place-items: center;
+      width: 18px;
+      color: currentColor;
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1;
     }
 
     .treeRow {
@@ -1616,7 +1708,8 @@ ${customColorStyles}
     .toggle:focus-visible,
     .actionButton:focus-visible,
     .filterInput:focus-visible,
-    .optionSelect:focus-visible,
+    .optionDropdownButton:focus-visible,
+    .optionDropdownChoice:focus-visible,
     .toolButton:focus-visible,
     .iconChoice:focus-visible,
     .colorChoice:focus-visible,

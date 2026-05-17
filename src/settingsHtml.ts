@@ -37,15 +37,16 @@ export function createSettingsHtml(state: NAssistantState): string {
           <span>Show hidden</span>
           <span class="switchTrack" aria-hidden="true"></span>
         </label>
-        <label class="optionField">
+        <div class="optionField">
           <span class="optionLabel">Sort</span>
-          <select class="optionSelect" id="explorerSortSelect" data-action="select-explorer-sort" aria-label="Explorer sort order">
-            <option value="default">Default</option>
-            <option value="nameAsc">Name A-Z</option>
-            <option value="nameDesc">Name Z-A</option>
-            <option value="type">Type</option>
-          </select>
-        </label>
+          <span class="optionDropdown" data-explorer-sort-menu="true">
+            <button class="optionDropdownButton" id="explorerSortButton" type="button" data-action="toggle-explorer-sort-menu" aria-haspopup="listbox" aria-expanded="false" aria-label="Explorer sort order">
+              <span class="optionDropdownLabel" id="explorerSortLabel">Default</span>
+              <span class="optionDropdownChevron" aria-hidden="true"></span>
+            </button>
+            <div class="optionDropdownMenu" id="explorerSortMenu" role="listbox" hidden></div>
+          </span>
+        </div>
       </div>
       <div class="tree" id="explorerTree" role="tree"></div>
     </section>
@@ -103,7 +104,9 @@ export function createSettingsHtml(state: NAssistantState): string {
     const explorerOptionsButton = document.getElementById('explorerOptionsButton');
     const explorerOptionsPanel = document.getElementById('explorerOptionsPanel');
     const explorerShowHiddenInput = document.getElementById('explorerShowHiddenInput');
-    const explorerSortSelect = document.getElementById('explorerSortSelect');
+    const explorerSortButton = document.getElementById('explorerSortButton');
+    const explorerSortLabel = document.getElementById('explorerSortLabel');
+    const explorerSortMenu = document.getElementById('explorerSortMenu');
     const explorerSettings = document.getElementById('explorerSettings');
     const featureList = document.getElementById('featureList');
     const colorPalette = document.getElementById('colorPalette');
@@ -121,6 +124,7 @@ export function createSettingsHtml(state: NAssistantState): string {
     let ignoredToggleClickUri = undefined;
     let activeFolderIconUri = undefined;
     let activeFolderIconTab = undefined;
+    let explorerSortMenuOpen = false;
     let explorerFilterText = '';
     let activeSettingsSection = 'features';
     let settingsSortMenuOpen = false;
@@ -373,6 +377,30 @@ export function createSettingsHtml(state: NAssistantState): string {
 
       if (action === 'toggle-explorer-options') {
         toggleExplorerOptions();
+        return;
+      }
+
+      if (action === 'toggle-explorer-sort-menu') {
+        explorerSortMenuOpen = !explorerSortMenuOpen;
+        syncExplorerSortDropdown();
+        positionExplorerOptionsPanel();
+        return;
+      }
+
+      if (action === 'select-explorer-sort') {
+        const sortMode = target.dataset.sortMode;
+
+        if (!getExplorerSortOptions().some(([value]) => value === sortMode)) {
+          return;
+        }
+
+        explorerSortMenuOpen = false;
+        setLocalExplorerOptions({ sortMode });
+        vscode.postMessage({
+          type: 'setExplorerSortMode',
+          sortMode
+        });
+        syncExplorerSortDropdown();
         return;
       }
 
@@ -908,7 +936,29 @@ export function createSettingsHtml(state: NAssistantState): string {
       }
 
       explorerShowHiddenInput.checked = Boolean(options.showHiddenFolders);
-      explorerSortSelect.value = getExplorerSortMode();
+      syncExplorerSortDropdown();
+    }
+
+    function syncExplorerSortDropdown() {
+      const currentValue = getExplorerSortMode();
+      const currentLabel = getExplorerSortLabel(currentValue);
+
+      explorerSortLabel.textContent = currentLabel;
+      explorerSortButton.classList.toggle('isOpen', explorerSortMenuOpen);
+      explorerSortButton.setAttribute('aria-expanded', String(explorerSortMenuOpen));
+      explorerSortMenu.hidden = !explorerSortMenuOpen;
+      explorerSortMenu.innerHTML = getExplorerSortOptions().map(([value, label]) => {
+        const isSelected = value === currentValue;
+        const selectedCss = isSelected ? ' isSelected' : '';
+        const check = isSelected
+          ? '<span class="optionDropdownCheck" aria-hidden="true">✓</span>'
+          : '<span class="optionDropdownCheck" aria-hidden="true"></span>';
+
+        return '<button class="optionDropdownChoice' + selectedCss + '" type="button" role="option" aria-selected="' + String(isSelected) + '" data-action="select-explorer-sort" data-sort-mode="' + escapeHtml(value) + '">' +
+          check +
+          '<span>' + escapeHtml(label) + '</span>' +
+        '</button>';
+      }).join('');
     }
 
     function setLocalExplorerOptions(nextOptions) {
@@ -952,6 +1002,8 @@ export function createSettingsHtml(state: NAssistantState): string {
       explorerOptionsPanel.hidden = true;
       explorerOptionsButton.classList.remove('isActive');
       explorerOptionsButton.setAttribute('aria-expanded', 'false');
+      explorerSortMenuOpen = false;
+      syncExplorerSortDropdown();
 
       return wasOpen;
     }
