@@ -8,6 +8,10 @@ import {
   getConfiguredAssistantTarget
 } from './assistantTargets';
 import { COMMANDS, CONFIG_SECTION } from './constants';
+import {
+  type ExplorerAppearanceState,
+  getExplorerAppearanceState
+} from './explorerAppearance';
 
 export const FEATURE_DEFINITIONS = [
   {
@@ -64,6 +68,7 @@ export interface FeatureCommandState {
 
 export interface SettingsState {
   assistantTarget: AssistantTargetState;
+  explorerAppearance: ExplorerAppearanceState;
   features: FeatureState[];
 }
 
@@ -73,7 +78,7 @@ export interface AssistantTargetState {
   options: AssistantTargetOption[];
 }
 
-export function getSettingsState(): SettingsState {
+export function getSettingsState(appearance: ExplorerAppearanceState = getExplorerAppearanceState()): SettingsState {
   const assistantTarget = getConfiguredAssistantTarget();
 
   return {
@@ -82,6 +87,7 @@ export function getSettingsState(): SettingsState {
       label: getAssistantTargetLabel(assistantTarget),
       options: getAssistantTargetOptions()
     },
+    explorerAppearance: appearance,
     features: FEATURE_DEFINITIONS.map((feature) => ({
       id: feature.id,
       title: feature.title,

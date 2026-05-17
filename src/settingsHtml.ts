@@ -3,6 +3,7 @@ import type { NAssistantState } from './appState';
 export function createSettingsHtml(state: NAssistantState): string {
   const nonce = createNonce();
   const initialState = JSON.stringify(state).replace(/</g, '\\u003c');
+  const customColorStyles = createCustomColorStyles(state);
 
   return `<!doctype html>
 <html lang="en">
@@ -58,8 +59,7 @@ export function createSettingsHtml(state: NAssistantState): string {
     }
 
     .meta,
-    .subtle,
-    .emptyState {
+    .subtle {
       color: var(--vscode-descriptionForeground);
     }
 
@@ -130,6 +130,203 @@ export function createSettingsHtml(state: NAssistantState): string {
       gap: 10px;
       margin-bottom: 8px;
       padding: 0 4px;
+    }
+
+    .settingsLayout {
+      display: grid;
+      grid-template-columns: 108px minmax(0, 1fr);
+      gap: 14px;
+      padding: 12px 10px 0;
+    }
+
+    .settingsSubtabs {
+      display: grid;
+      align-self: start;
+      gap: 2px;
+      min-width: 0;
+      padding: 0;
+    }
+
+    .settingsNavButton {
+      position: relative;
+      overflow: hidden;
+      width: 100%;
+      min-height: 28px;
+      border: 0;
+      border-radius: 4px;
+      color: var(--vscode-descriptionForeground);
+      background: transparent;
+      cursor: pointer;
+      padding: 4px 8px 4px 10px;
+      font-weight: 600;
+      text-align: left;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .settingsNavButton:hover {
+      color: var(--vscode-foreground);
+      background: var(--vscode-list-hoverBackground);
+    }
+
+    .settingsNavButton.isActive {
+      color: var(--vscode-foreground);
+      background: color-mix(in srgb, var(--vscode-list-activeSelectionBackground) 40%, transparent);
+    }
+
+    .settingsNavButton.isActive::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 6px;
+      bottom: 6px;
+      width: 2px;
+      border-radius: 999px;
+      background: var(--vscode-focusBorder);
+    }
+
+    .settingsContent {
+      min-width: 0;
+    }
+
+    .settingsPane {
+      padding: 0;
+    }
+
+    .settingsPane[hidden] {
+      display: none;
+    }
+
+    .settingsIntro {
+      margin: -2px 0 10px;
+      color: var(--vscode-descriptionForeground);
+      font-size: 11px;
+    }
+
+    .settingsRows {
+      display: grid;
+      gap: 0;
+      border-top: 1px solid var(--vscode-panel-border);
+    }
+
+    .settingRow {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(160px, 0.48fr);
+      align-items: start;
+      gap: 14px;
+      min-width: 0;
+      min-height: 54px;
+      border: 0;
+      border-bottom: 1px solid var(--vscode-panel-border);
+      border-radius: 0;
+      background: transparent;
+      padding: 10px 0;
+    }
+
+    .settingCopy {
+      display: grid;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .settingTitle {
+      display: block;
+      overflow: hidden;
+      font-weight: 650;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .settingDescription {
+      display: block;
+      overflow: hidden;
+      margin-top: 2px;
+      color: var(--vscode-descriptionForeground);
+      font-size: 11px;
+      line-height: 1.35;
+      text-overflow: ellipsis;
+      white-space: normal;
+    }
+
+    .settingControl {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: flex-end;
+      min-width: 0;
+      align-self: center;
+    }
+
+    .settingControlWide {
+      width: 100%;
+    }
+
+    .settingsDropdown {
+      position: relative;
+      width: 100%;
+    }
+
+    .settingsDropdownButton {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      width: 100%;
+      min-height: 28px;
+      border: 1px solid var(--vscode-dropdown-border, var(--vscode-input-border, var(--vscode-panel-border)));
+      border-radius: 3px;
+      color: var(--vscode-dropdown-foreground, var(--vscode-foreground));
+      background: var(--vscode-dropdown-background, var(--vscode-input-background));
+      cursor: pointer;
+      padding: 3px 8px;
+      text-align: left;
+    }
+
+    .settingsDropdownButton:hover,
+    .settingsDropdownButton.isOpen {
+      border-color: var(--vscode-focusBorder);
+    }
+
+    .settingsDropdownChevron {
+      flex: 0 0 auto;
+      color: var(--vscode-descriptionForeground);
+      font-size: 10px;
+      line-height: 1;
+    }
+
+    .settingsDropdownMenu {
+      position: absolute;
+      z-index: 40;
+      left: 0;
+      right: 0;
+      top: calc(100% + 4px);
+      border: 1px solid var(--vscode-dropdown-border, var(--vscode-panel-border));
+      border-radius: 4px;
+      color: var(--vscode-dropdown-foreground, var(--vscode-foreground));
+      background: var(--vscode-dropdown-background, var(--vscode-editorWidget-background));
+      box-shadow: 0 4px 12px rgb(0 0 0 / 28%);
+      padding: 3px 0;
+    }
+
+    .settingsDropdownMenu[hidden] {
+      display: none;
+    }
+
+    .settingsDropdownMenu button {
+      display: block;
+      width: 100%;
+      min-height: 26px;
+      border: 0;
+      color: inherit;
+      background: transparent;
+      cursor: pointer;
+      padding: 4px 8px;
+      text-align: left;
+    }
+
+    .settingsDropdownMenu button:hover,
+    .settingsDropdownMenu button.isSelected {
+      background: var(--vscode-list-hoverBackground);
     }
 
     h2 {
@@ -318,12 +515,14 @@ export function createSettingsHtml(state: NAssistantState): string {
       transition: transform 120ms ease, background 120ms ease;
     }
 
-    .optionCheck:checked + .switchTrack {
+    .optionCheck:checked + .switchTrack,
+    .optionCheck:checked ~ .switchTrack {
       border-color: var(--vscode-focusBorder);
       background: color-mix(in srgb, var(--vscode-button-background) 70%, transparent);
     }
 
-    .optionCheck:checked + .switchTrack::after {
+    .optionCheck:checked + .switchTrack::after,
+    .optionCheck:checked ~ .switchTrack::after {
       background: var(--vscode-button-foreground);
       transform: translateX(14px);
     }
@@ -370,10 +569,6 @@ export function createSettingsHtml(state: NAssistantState): string {
     .treeRow.isHidden .nodeIcon,
     .treeRow.isHidden .nodeLabel {
       opacity: 0.48;
-    }
-
-    .treeRow.isLoading {
-      color: var(--vscode-descriptionForeground);
     }
 
     .treeRow.isEditing .rowActions {
@@ -471,6 +666,85 @@ export function createSettingsHtml(state: NAssistantState): string {
       height: 12px;
       border: 1px solid currentColor;
       border-radius: 2px;
+    }
+
+    .nodeIconButton {
+      display: grid;
+      place-items: center;
+      flex: 0 0 20px;
+      width: 20px;
+      height: 20px;
+      margin-right: 3px;
+      border: 0;
+      border-radius: 4px;
+      background: transparent;
+      cursor: pointer;
+      padding: 1px;
+    }
+
+    .nodeIconButton:hover {
+      background: var(--vscode-toolbar-hoverBackground);
+    }
+
+    .nodeIconButton .nodeIcon {
+      margin-right: 0;
+    }
+
+    .nodeIcon.fileTypeIcon {
+      display: grid;
+      place-items: center;
+      isolation: isolate;
+      color: var(--node-icon-color, var(--vscode-descriptionForeground));
+      font-family: var(--vscode-editor-font-family);
+    }
+
+    .iconColorMuted {
+      --node-icon-color: #9aa0a6;
+      --choice-color: #9aa0a6;
+    }
+
+    .iconColorBlue {
+      --node-icon-color: #4fc1ff;
+      --choice-color: #4fc1ff;
+    }
+
+    .iconColorGreen {
+      --node-icon-color: #7ee787;
+      --choice-color: #7ee787;
+    }
+
+    .iconColorYellow {
+      --node-icon-color: #f7c663;
+      --choice-color: #f7c663;
+    }
+
+    .iconColorOrange {
+      --node-icon-color: #f78c6c;
+      --choice-color: #f78c6c;
+    }
+
+    .iconColorPink {
+      --node-icon-color: #c586c0;
+      --choice-color: #c586c0;
+    }
+
+    .iconColorCyan {
+      --node-icon-color: #9cdcfe;
+      --choice-color: #9cdcfe;
+    }
+
+${customColorStyles}
+
+    .nodeIconText {
+      overflow: hidden;
+      max-width: 16px;
+      color: var(--node-icon-color, var(--vscode-descriptionForeground));
+      font-size: 7.5px;
+      font-weight: 750;
+      line-height: 1;
+      text-align: center;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .nodeLabel {
@@ -596,11 +870,6 @@ export function createSettingsHtml(state: NAssistantState): string {
       transform: rotate(-38deg);
     }
 
-    .emptyState {
-      padding: 14px 8px;
-      font-size: 12px;
-    }
-
     .inlineNameInput {
       width: min(220px, 80%);
       min-height: 20px;
@@ -650,17 +919,167 @@ export function createSettingsHtml(state: NAssistantState): string {
       background: var(--vscode-menu-separatorBackground, var(--vscode-panel-border));
     }
 
+    .iconPicker {
+      position: fixed;
+      z-index: 30;
+      width: 196px;
+      max-width: calc(100vw - 12px);
+      border: 1px solid var(--vscode-panel-border);
+      border-radius: 7px;
+      color: var(--vscode-menu-foreground, var(--vscode-foreground));
+      background: var(--vscode-menu-background, var(--vscode-editorWidget-background));
+      box-shadow: 0 4px 14px rgb(0 0 0 / 28%);
+      padding: 7px;
+    }
+
+    .iconPicker[hidden] {
+      display: none;
+    }
+
+    .pickerLabel {
+      margin: 2px 0 6px;
+      color: var(--vscode-descriptionForeground);
+      font-size: 11px;
+      font-weight: 650;
+    }
+
+    .iconGrid,
+    .colorGrid {
+      display: grid;
+      gap: 5px;
+    }
+
+    .iconGrid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .colorGrid {
+      grid-template-columns: repeat(7, 1fr);
+      margin-top: 8px;
+    }
+
+    .iconChoice,
+    .colorChoice {
+      border: 1px solid var(--vscode-panel-border);
+      border-radius: 5px;
+      background: var(--vscode-input-background);
+      cursor: pointer;
+    }
+
+    .iconChoice {
+      min-height: 28px;
+      color: var(--choice-color, var(--vscode-descriptionForeground));
+      font-size: 9px;
+      font-weight: 750;
+    }
+
+    .colorChoice {
+      height: 20px;
+      background: var(--choice-color, var(--vscode-descriptionForeground));
+    }
+
+    .iconChoice.isSelected,
+    .colorChoice.isSelected {
+      border-color: var(--vscode-focusBorder);
+      outline: 1px solid var(--vscode-focusBorder);
+      outline-offset: 1px;
+    }
+
+    .colorPalette {
+      display: grid;
+      gap: 7px;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--vscode-panel-border);
+    }
+
+    .paletteHeader {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .paletteTitle {
+      font-size: 11px;
+      font-weight: 650;
+    }
+
+    .paletteGrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(26px, 1fr));
+      gap: 5px;
+      min-width: 0;
+    }
+
+    .paletteColor {
+      position: relative;
+      min-width: 0;
+      height: 24px;
+      border: 1px solid var(--vscode-panel-border);
+      border-radius: 4px;
+      background: var(--choice-color, var(--vscode-descriptionForeground));
+    }
+
+    .paletteColor.isDefault::after {
+      content: "";
+      position: absolute;
+      right: 4px;
+      bottom: 4px;
+      width: 4px;
+      height: 4px;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--vscode-sideBar-background) 72%, transparent);
+    }
+
+    .paletteColor button {
+      position: absolute;
+      inset: -1px;
+      border: 0;
+      border-radius: 4px;
+      color: var(--vscode-button-foreground);
+      background: transparent;
+      cursor: pointer;
+      opacity: 0;
+    }
+
+    .paletteColor button:hover,
+    .paletteColor button:focus-visible {
+      opacity: 1;
+      background: rgb(0 0 0 / 38%);
+    }
+
+    .paletteAdd {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 6px;
+    }
+
+    .paletteInput {
+      min-width: 0;
+      width: 100%;
+      min-height: 26px;
+      border: 1px solid var(--vscode-input-border, var(--vscode-panel-border));
+      border-radius: 3px;
+      color: var(--vscode-input-foreground);
+      background: var(--vscode-input-background);
+      padding: 2px 7px;
+    }
+
     .featureList {
       display: grid;
-      gap: 8px;
+      gap: 0;
+      border-top: 1px solid var(--vscode-panel-border);
     }
 
     .featureCard {
       min-width: 0;
-      border: 1px solid var(--vscode-panel-border);
-      border-radius: 8px;
-      background: var(--vscode-editor-background);
-      padding: 10px;
+      border: 0;
+      border-bottom: 1px solid var(--vscode-panel-border);
+      border-radius: 0;
+      background: transparent;
+      padding: 10px 2px;
     }
 
     .featureTop {
@@ -726,6 +1145,226 @@ export function createSettingsHtml(state: NAssistantState): string {
       gap: 6px;
     }
 
+    .fileRules {
+      display: grid;
+      gap: 0;
+      margin-top: 0;
+      border-top: 1px solid var(--vscode-panel-border);
+    }
+
+    .fileRuleHeader,
+    .fileRuleRow,
+    .fileRuleAdd {
+      display: grid;
+      grid-template-columns: minmax(56px, 0.7fr) minmax(68px, 1fr) minmax(74px, 1fr) 36px 24px;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+      padding: 7px 2px;
+      border: 0;
+      border-bottom: 1px solid var(--vscode-panel-border);
+      border-radius: 0;
+      background: transparent;
+    }
+
+    .fileRuleHeader {
+      min-height: 24px;
+      color: var(--vscode-descriptionForeground);
+      font-size: 10px;
+      font-weight: 650;
+      text-transform: uppercase;
+    }
+
+    .fileRuleExtension {
+      overflow: hidden;
+      font-family: var(--vscode-editor-font-family);
+      font-size: 11px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .fileRuleControls {
+      display: contents;
+    }
+
+    .fileRuleInput {
+      min-width: 0;
+      width: 100%;
+      min-height: 26px;
+      border: 1px solid var(--vscode-dropdown-border, var(--vscode-input-border, var(--vscode-panel-border)));
+      border-radius: 3px;
+      color: var(--vscode-dropdown-foreground, var(--vscode-foreground));
+      background: var(--vscode-dropdown-background, var(--vscode-input-background));
+      padding: 2px 6px;
+    }
+
+    .fileRuleHidden {
+      display: grid;
+      place-items: center;
+    }
+
+    .fileRuleHidden input {
+      margin: 0;
+    }
+
+    .fileRuleAdd .fileRuleInput {
+      grid-column: 1 / 4;
+    }
+
+    .fileRuleRemove {
+      width: 24px;
+      height: 24px;
+      border: 0;
+      border-radius: 5px;
+      background: transparent;
+      cursor: pointer;
+    }
+
+    .fileRuleRemove:hover {
+      background: var(--vscode-toolbar-hoverBackground);
+    }
+
+    .fileRuleAddButton {
+      grid-column: 4 / 6;
+      min-width: 0;
+      min-height: 26px;
+      border: 1px solid var(--vscode-button-border, var(--vscode-panel-border));
+      border-radius: 3px;
+      color: var(--vscode-button-secondaryForeground);
+      background: var(--vscode-button-secondaryBackground);
+      cursor: pointer;
+    }
+
+    .fileRuleAddButton:hover {
+      background: var(--vscode-button-secondaryHoverBackground);
+    }
+
+    .paletteAdd .fileRuleAddButton {
+      grid-column: auto;
+    }
+
+    .fileRuleIconPicker,
+    .fileRuleColorPicker {
+      position: relative;
+      min-width: 0;
+      width: 100%;
+    }
+
+    .fileRuleIconButton,
+    .fileRuleColorButton {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 7px;
+      width: 100%;
+      min-height: 26px;
+      border: 1px solid var(--vscode-dropdown-border, var(--vscode-input-border, var(--vscode-panel-border)));
+      border-radius: 3px;
+      color: var(--vscode-dropdown-foreground, var(--vscode-foreground));
+      background: var(--vscode-dropdown-background, var(--vscode-input-background));
+      cursor: pointer;
+      padding: 2px 7px;
+    }
+
+    .fileRuleIconButton:hover,
+    .fileRuleIconButton.isOpen,
+    .fileRuleColorButton:hover,
+    .fileRuleColorButton.isOpen {
+      border-color: var(--vscode-focusBorder);
+    }
+
+    .fileRuleIconMark {
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      width: 16px;
+      height: 16px;
+      color: var(--vscode-descriptionForeground);
+      font-family: var(--vscode-editor-font-family);
+      font-size: 8px;
+      font-weight: 750;
+    }
+
+    .colorSwatch {
+      flex: 0 0 auto;
+      width: 12px;
+      height: 12px;
+      border: 1px solid color-mix(in srgb, var(--choice-color, currentColor) 72%, var(--vscode-panel-border));
+      border-radius: 3px;
+      background: var(--choice-color, var(--vscode-descriptionForeground));
+    }
+
+    .fileRuleIconLabel,
+    .fileRuleColorLabel {
+      overflow: hidden;
+      min-width: 0;
+      flex: 1 1 auto;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .fileRuleIconChevron,
+    .fileRuleColorChevron {
+      flex: 0 0 auto;
+      color: var(--vscode-descriptionForeground);
+      font-size: 10px;
+    }
+
+    .fileRuleIconMenu,
+    .fileRuleColorMenu {
+      position: absolute;
+      z-index: 40;
+      left: 0;
+      top: calc(100% + 4px);
+      display: grid;
+      grid-template-columns: repeat(7, 20px);
+      gap: 5px;
+      border: 1px solid var(--vscode-dropdown-border, var(--vscode-panel-border));
+      border-radius: 5px;
+      background: var(--vscode-dropdown-background, var(--vscode-editorWidget-background));
+      box-shadow: 0 4px 12px rgb(0 0 0 / 28%);
+      padding: 6px;
+    }
+
+    .fileRuleIconMenu {
+      grid-template-columns: repeat(4, minmax(30px, 1fr));
+      min-width: 154px;
+    }
+
+    .fileRuleIconMenu[hidden],
+    .fileRuleColorMenu[hidden] {
+      display: none;
+    }
+
+    .fileRuleIconChoice,
+    .fileRuleColorChoice {
+      width: 20px;
+      height: 20px;
+      border: 1px solid var(--vscode-panel-border);
+      border-radius: 4px;
+      background: var(--choice-color, var(--vscode-descriptionForeground));
+      cursor: pointer;
+    }
+
+    .fileRuleIconChoice {
+      display: grid;
+      place-items: center;
+      width: auto;
+      min-width: 30px;
+      color: var(--vscode-foreground);
+      background: var(--vscode-input-background);
+      font-family: var(--vscode-editor-font-family);
+      font-size: 9px;
+      font-weight: 750;
+    }
+
+    .fileRuleIconChoice.isSelected,
+    .fileRuleColorChoice.isSelected {
+      border-color: var(--vscode-focusBorder);
+      outline: 1px solid var(--vscode-focusBorder);
+      outline-offset: 1px;
+    }
+
     .actionButton {
       flex: 0 0 auto;
       padding: 4px 8px;
@@ -783,22 +1422,74 @@ export function createSettingsHtml(state: NAssistantState): string {
     .filterInput:focus-visible,
     .optionSelect:focus-visible,
     .toolButton:focus-visible,
+    .iconChoice:focus-visible,
+    .colorChoice:focus-visible,
+    .fileRuleInput:focus-visible,
+    .fileRuleRemove:focus-visible,
+    .fileRuleAddButton:focus-visible,
+    .paletteInput:focus-visible,
+    .paletteColor button:focus-visible,
+    .fileRuleIconButton:focus-visible,
+    .fileRuleIconChoice:focus-visible,
+    .fileRuleColorButton:focus-visible,
+    .fileRuleColorChoice:focus-visible,
+    .settingsNavButton:focus-visible,
+    .settingsDropdownButton:focus-visible,
+    .settingsDropdownMenu button:focus-visible,
     .targetSelect:focus-visible,
     .tabButton:focus-visible,
     .treeRow:focus-visible,
     .disclosureButton:focus-visible,
+    .nodeIconButton:focus-visible,
     .nodeActionButton:focus-visible {
       outline: 1px solid var(--vscode-focusBorder);
       outline-offset: 1px;
     }
 
-    .optionCheck:focus-visible + .switchTrack {
+    .optionCheck:focus-visible + .switchTrack,
+    .optionCheck:focus-visible ~ .switchTrack {
       outline: 1px solid var(--vscode-focusBorder);
       outline-offset: 2px;
     }
 
     .disabled {
       opacity: 0.62;
+    }
+
+    @media (max-width: 430px) {
+      .settingsLayout {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+
+      .settingsSubtabs {
+        display: flex;
+        overflow-x: auto;
+        padding-bottom: 2px;
+      }
+
+      .settingsNavButton {
+        flex: 0 0 auto;
+        width: auto;
+      }
+
+      .settingsNavButton.isActive::before {
+        left: 8px;
+        right: 8px;
+        top: auto;
+        bottom: 0;
+        width: auto;
+        height: 2px;
+      }
+
+      .settingRow {
+        grid-template-columns: 1fr;
+        gap: 7px;
+      }
+
+      .settingControl {
+        justify-self: start;
+      }
     }
 
     @media (max-width: 240px) {
@@ -844,15 +1535,44 @@ export function createSettingsHtml(state: NAssistantState): string {
       <div class="tree" id="explorerTree" role="tree"></div>
     </section>
 
-    <section class="panel" id="settingsPanel" aria-labelledby="featuresHeading" hidden>
-      <div class="sectionHeader">
-        <h2 id="featuresHeading">Features</h2>
-        <span class="count" id="featureCount"></span>
+    <section class="panel" id="settingsPanel" aria-label="Settings" hidden>
+      <div class="settingsLayout">
+        <div class="settingsSubtabs" role="tablist" aria-label="Settings categories">
+          <button class="settingsNavButton" type="button" data-action="settings-section" data-settings-section="features">Commands</button>
+          <button class="settingsNavButton" type="button" data-action="settings-section" data-settings-section="explorer">Explorer</button>
+          <button class="settingsNavButton" type="button" data-action="settings-section" data-settings-section="fileRules">Files</button>
+        </div>
+        <div class="settingsContent">
+          <div class="settingsPane" data-settings-pane="features">
+            <div class="sectionHeader">
+              <h2 id="featuresHeading">Commands</h2>
+              <span class="count" id="featureCount"></span>
+            </div>
+            <p class="settingsIntro">Copy and paste helpers exposed by NAssistant.</p>
+            <div class="featureList" id="featureList"></div>
+          </div>
+          <div class="settingsPane" data-settings-pane="explorer" hidden>
+            <div class="sectionHeader">
+              <h2>Explorer</h2>
+            </div>
+            <p class="settingsIntro">Display behavior for the NAssistant Explorer.</p>
+            <div class="settingsRows" id="explorerSettings"></div>
+          </div>
+          <div class="settingsPane" data-settings-pane="fileRules" hidden>
+            <div class="sectionHeader">
+              <h2>File Rules</h2>
+              <span class="count" id="fileRuleCount"></span>
+            </div>
+            <p class="settingsIntro">Extension icons and NAssistant-only hide rules.</p>
+            <div class="colorPalette" id="colorPalette"></div>
+            <div class="fileRules" id="fileRules"></div>
+          </div>
+        </div>
       </div>
-      <div class="featureList" id="featureList"></div>
     </section>
 
     <div class="contextMenu" id="explorerContextMenu" hidden></div>
+    <div class="iconPicker" id="folderIconPicker" hidden></div>
   </main>
 
   <script nonce="${nonce}">
@@ -863,21 +1583,35 @@ export function createSettingsHtml(state: NAssistantState): string {
     const settingsPanel = document.getElementById('settingsPanel');
     const explorerTree = document.getElementById('explorerTree');
     const explorerContextMenu = document.getElementById('explorerContextMenu');
+    const folderIconPicker = document.getElementById('folderIconPicker');
     const explorerFilterInput = document.getElementById('explorerFilterInput');
     const explorerOptionsButton = document.getElementById('explorerOptionsButton');
     const explorerOptionsPanel = document.getElementById('explorerOptionsPanel');
     const explorerShowHiddenInput = document.getElementById('explorerShowHiddenInput');
     const explorerSortSelect = document.getElementById('explorerSortSelect');
+    const explorerSettings = document.getElementById('explorerSettings');
     const featureList = document.getElementById('featureList');
+    const colorPalette = document.getElementById('colorPalette');
+    const fileRules = document.getElementById('fileRules');
     const featureCount = document.getElementById('featureCount');
+    const fileRuleCount = document.getElementById('fileRuleCount');
     const tabButtons = Array.from(document.querySelectorAll('[data-action="tab"]'));
+    const settingsSectionButtons = Array.from(document.querySelectorAll('[data-action="settings-section"]'));
+    const settingsPanes = Array.from(document.querySelectorAll('[data-settings-pane]'));
     let selectedExplorerUris = [];
     let focusedExplorerUri = undefined;
     let anchorExplorerUri = undefined;
     let inlineEdit = undefined;
     let dropTargetUri = undefined;
     let ignoredToggleClickUri = undefined;
+    let activeFolderIconUri = undefined;
     let explorerFilterText = '';
+    let activeSettingsSection = 'features';
+    let settingsSortMenuOpen = false;
+    let activeFileRuleIconExtension = undefined;
+    let activeFileRuleColorExtension = undefined;
+    let pendingExplorerStatus = undefined;
+    let lastExplorerStatus = '';
     const optimisticExpandedByUri = new Map();
     const treeModelByUri = new Map();
     const treeChildrenByUri = new Map();
@@ -899,6 +1633,7 @@ export function createSettingsHtml(state: NAssistantState): string {
       }
 
       if (selectTarget?.dataset.action === 'select-explorer-sort') {
+        setLocalExplorerOptions({ sortMode: selectTarget.value });
         vscode.postMessage({
           type: 'setExplorerSortMode',
           sortMode: selectTarget.value
@@ -907,9 +1642,19 @@ export function createSettingsHtml(state: NAssistantState): string {
       }
 
       if (checkboxTarget?.dataset.action === 'toggle-explorer-show-hidden') {
+        setLocalExplorerOptions({ showHiddenFolders: checkboxTarget.checked });
         vscode.postMessage({
           type: 'setExplorerShowHiddenFolders',
           showHiddenFolders: checkboxTarget.checked
+        });
+        return;
+      }
+
+      if (checkboxTarget?.dataset.action === 'toggle-file-rule-hidden') {
+        vscode.postMessage({
+          type: 'setFileExtensionHidden',
+          extension: checkboxTarget.dataset.extension,
+          hidden: checkboxTarget.checked
         });
       }
     });
@@ -927,6 +1672,22 @@ export function createSettingsHtml(state: NAssistantState): string {
       if (!isExplorerContextMenuEventTarget(event.target)) {
         hideContextMenu();
       }
+
+      if (!isFolderIconPickerEventTarget(event.target)) {
+        hideFolderIconPicker();
+      }
+
+      if (!isSettingsSortMenuEventTarget(event.target)) {
+        hideSettingsSortMenu();
+      }
+
+      if (!isFileRuleColorMenuEventTarget(event.target)) {
+        hideFileRuleColorMenu();
+      }
+
+      if (!isFileRuleIconMenuEventTarget(event.target)) {
+        hideFileRuleIconMenu();
+      }
     });
 
     document.addEventListener('focusin', (event) => {
@@ -937,6 +1698,22 @@ export function createSettingsHtml(state: NAssistantState): string {
       if (!isExplorerContextMenuEventTarget(event.target)) {
         hideContextMenu();
       }
+
+      if (!isFolderIconPickerEventTarget(event.target)) {
+        hideFolderIconPicker();
+      }
+
+      if (!isSettingsSortMenuEventTarget(event.target)) {
+        hideSettingsSortMenu();
+      }
+
+      if (!isFileRuleColorMenuEventTarget(event.target)) {
+        hideFileRuleColorMenu();
+      }
+
+      if (!isFileRuleIconMenuEventTarget(event.target)) {
+        hideFileRuleIconMenu();
+      }
     });
 
     window.addEventListener('blur', () => {
@@ -946,6 +1723,10 @@ export function createSettingsHtml(state: NAssistantState): string {
     window.addEventListener('resize', () => {
       if (!explorerOptionsPanel.hidden) {
         positionExplorerOptionsPanel();
+      }
+
+      if (!folderIconPicker.hidden) {
+        positionFolderIconPicker();
       }
     });
 
@@ -1030,6 +1811,37 @@ export function createSettingsHtml(state: NAssistantState): string {
         return;
       }
 
+      if (action === 'settings-section') {
+        activeSettingsSection = getSettingsSection(target.dataset.settingsSection);
+        settingsSortMenuOpen = false;
+        activeFileRuleIconExtension = undefined;
+        activeFileRuleColorExtension = undefined;
+        renderSettings();
+        return;
+      }
+
+      if (action === 'toggle-settings-sort-menu') {
+        settingsSortMenuOpen = !settingsSortMenuOpen;
+        renderSettings();
+        return;
+      }
+
+      if (action === 'select-settings-sort') {
+        const sortMode = target.dataset.sortMode;
+
+        if (!getExplorerSortOptions().some(([value]) => value === sortMode)) {
+          return;
+        }
+
+        settingsSortMenuOpen = false;
+        setLocalExplorerOptions({ sortMode });
+        vscode.postMessage({
+          type: 'setExplorerSortMode',
+          sortMode
+        });
+        return;
+      }
+
       if (action === 'toggle-explorer-options') {
         toggleExplorerOptions();
         return;
@@ -1078,6 +1890,94 @@ export function createSettingsHtml(state: NAssistantState): string {
           });
         }
 
+        return;
+      }
+
+      if (action === 'open-folder-icon-picker') {
+        const uri = target.dataset.uri;
+
+        if (uri) {
+          showFolderIconPicker(uri);
+        }
+
+        return;
+      }
+
+      if (action === 'set-folder-icon') {
+        const uri = activeFolderIconUri;
+        const icon = target.dataset.icon;
+        const color = target.dataset.color;
+
+        if (uri && icon && color) {
+          setLocalFolderIcon(uri, icon, color);
+          renderVisibleRowsDiff();
+          showFolderIconPicker(uri);
+          vscode.postMessage({
+            type: 'setFolderIcon',
+            uri,
+            icon,
+            color
+          });
+        }
+
+        return;
+      }
+
+      if (action === 'toggle-file-rule-icon-menu') {
+        const extension = target.dataset.extension;
+
+        activeFileRuleIconExtension = activeFileRuleIconExtension === extension ? undefined : extension;
+        activeFileRuleColorExtension = undefined;
+        renderSettings();
+        return;
+      }
+
+      if (action === 'select-file-rule-icon') {
+        const extension = target.dataset.extension;
+        const icon = target.dataset.icon;
+        const color = target.dataset.color;
+
+        activeFileRuleIconExtension = undefined;
+
+        if (extension && icon && color) {
+          vscode.postMessage({
+            type: 'setFileExtensionIcon',
+            extension,
+            icon,
+            color
+          });
+        }
+
+        renderSettings();
+        return;
+      }
+
+      if (action === 'toggle-file-rule-color-menu') {
+        const extension = target.dataset.extension;
+
+        activeFileRuleColorExtension = activeFileRuleColorExtension === extension ? undefined : extension;
+        activeFileRuleIconExtension = undefined;
+        renderSettings();
+        return;
+      }
+
+      if (action === 'select-file-rule-color') {
+        const extension = target.dataset.extension;
+        const icon = target.dataset.icon;
+        const color = target.dataset.color;
+
+        activeFileRuleColorExtension = undefined;
+
+        if (extension && icon && color) {
+          vscode.postMessage({
+            type: 'setFileExtensionIcon',
+            extension,
+            icon,
+            color
+          });
+        }
+
+        renderSettings();
         return;
       }
 
@@ -1135,6 +2035,62 @@ export function createSettingsHtml(state: NAssistantState): string {
         vscode.postMessage({
           type: 'copyCommandId',
           command: target.dataset.command
+        });
+      }
+
+      if (action === 'add-file-extension-rule') {
+        const input = document.getElementById('newFileExtensionInput');
+        const extension = input instanceof HTMLInputElement ? input.value.trim() : '';
+
+        if (extension) {
+          vscode.postMessage({
+            type: 'setFileExtensionIcon',
+            extension,
+            icon: 'file',
+            color: 'muted'
+          });
+
+          if (input instanceof HTMLInputElement) {
+            input.value = '';
+          }
+        }
+      }
+
+      if (action === 'remove-file-extension-rule') {
+        vscode.postMessage({
+          type: 'removeFileExtensionRule',
+          extension: target.dataset.extension
+        });
+      }
+
+      if (action === 'add-explorer-color') {
+        const input = document.getElementById('newExplorerColorInput');
+        const color = input instanceof HTMLInputElement ? input.value.trim() : '';
+        const normalizedColor = normalizeHexColorInput(color);
+
+        if (!normalizedColor) {
+          vscode.postMessage({
+            type: 'showStatusMessage',
+            message: 'NAssistant: Enter a HEX color like #7E5BEF.',
+            timeout: 2500
+          });
+          return;
+        }
+
+        vscode.postMessage({
+          type: 'addExplorerColor',
+          color: normalizedColor
+        });
+
+        if (input instanceof HTMLInputElement) {
+          input.value = '';
+        }
+      }
+
+      if (action === 'remove-explorer-color') {
+        vscode.postMessage({
+          type: 'removeExplorerColor',
+          color: target.dataset.color
         });
       }
     });
@@ -1405,6 +2361,25 @@ export function createSettingsHtml(state: NAssistantState): string {
       explorerSortSelect.value = getExplorerSortMode();
     }
 
+    function setLocalExplorerOptions(nextOptions) {
+      const explorer = state.explorer || {};
+
+      state = {
+        ...state,
+        explorer: {
+          ...explorer,
+          options: {
+            ...getFallbackExplorerOptions(),
+            ...(explorer.options || {}),
+            ...nextOptions
+          }
+        }
+      };
+
+      renderExplorer();
+      renderSettings();
+    }
+
     function toggleExplorerOptions() {
       const shouldOpen = explorerOptionsPanel.hidden;
 
@@ -1464,11 +2439,72 @@ export function createSettingsHtml(state: NAssistantState): string {
       return Boolean(source?.closest('#explorerContextMenu'));
     }
 
+    function isFolderIconPickerEventTarget(target) {
+      const source = target instanceof Element ? target : target?.parentElement;
+
+      return Boolean(source?.closest('#folderIconPicker') || source?.closest('[data-action="open-folder-icon-picker"]'));
+    }
+
+    function isSettingsSortMenuEventTarget(target) {
+      const source = target instanceof Element ? target : target?.parentElement;
+
+      return Boolean(source?.closest('[data-settings-sort-menu="true"]'));
+    }
+
+    function isFileRuleColorMenuEventTarget(target) {
+      const source = target instanceof Element ? target : target?.parentElement;
+
+      return Boolean(source?.closest('[data-file-rule-color-menu="true"]'));
+    }
+
+    function isFileRuleIconMenuEventTarget(target) {
+      const source = target instanceof Element ? target : target?.parentElement;
+
+      return Boolean(source?.closest('[data-file-rule-icon-menu="true"]'));
+    }
+
     function hideExplorerTransientPanels() {
       const hidOptions = hideExplorerOptions();
       const hidContextMenu = hideContextMenu();
+      const hidFolderIconPicker = hideFolderIconPicker();
+      const hidSettingsSortMenu = hideSettingsSortMenu();
+      const hidFileRuleColorMenu = hideFileRuleColorMenu();
+      const hidFileRuleIconMenu = hideFileRuleIconMenu();
 
-      return hidOptions || hidContextMenu;
+      return hidOptions || hidContextMenu || hidFolderIconPicker || hidSettingsSortMenu || hidFileRuleColorMenu || hidFileRuleIconMenu;
+    }
+
+    function hideSettingsSortMenu() {
+      if (!settingsSortMenuOpen) {
+        return false;
+      }
+
+      settingsSortMenuOpen = false;
+      renderSettings();
+
+      return true;
+    }
+
+    function hideFileRuleIconMenu() {
+      if (!activeFileRuleIconExtension) {
+        return false;
+      }
+
+      activeFileRuleIconExtension = undefined;
+      renderSettings();
+
+      return true;
+    }
+
+    function hideFileRuleColorMenu() {
+      if (!activeFileRuleColorExtension) {
+        return false;
+      }
+
+      activeFileRuleColorExtension = undefined;
+      renderSettings();
+
+      return true;
     }
 
     function renderExplorer() {
@@ -1481,6 +2517,7 @@ export function createSettingsHtml(state: NAssistantState): string {
         options: getFallbackExplorerOptions()
       };
 
+      pendingExplorerStatus = undefined;
       syncExplorerControls(explorer);
 
       if (!explorer.workspaceFolderCount) {
@@ -1492,7 +2529,8 @@ export function createSettingsHtml(state: NAssistantState): string {
         treeChildrenByUri.clear();
         treeRootUris = [];
         visibleRows = [];
-        explorerTree.innerHTML = '<div class="emptyState">No workspace folder open.</div>';
+        explorerTree.innerHTML = '';
+        postExplorerStatus('NAssistant: Open a workspace folder to use Explorer.');
         return;
       }
 
@@ -1501,6 +2539,30 @@ export function createSettingsHtml(state: NAssistantState): string {
       pruneExplorerSelection();
       syncExplorerSelectionDom();
       focusInlineInput();
+      flushExplorerStatus();
+    }
+
+    function queueExplorerStatus(message) {
+      pendingExplorerStatus = pendingExplorerStatus || message;
+    }
+
+    function flushExplorerStatus() {
+      if (pendingExplorerStatus) {
+        postExplorerStatus(pendingExplorerStatus);
+      }
+    }
+
+    function postExplorerStatus(message) {
+      if (!message || lastExplorerStatus === message) {
+        return;
+      }
+
+      lastExplorerStatus = message;
+      vscode.postMessage({
+        type: 'showStatusMessage',
+        message,
+        timeout: 1800
+      });
     }
 
     function syncTreeModelFromExplorer(explorer) {
@@ -1540,12 +2602,9 @@ export function createSettingsHtml(state: NAssistantState): string {
       }
 
       if (rows.length === 0) {
-        rows.push({
-          key: 'message:empty',
-          kind: 'message',
-          message: getExplorerFilterText() ? 'No search results.' : 'No items.',
-          depth: 0
-        });
+        queueExplorerStatus(getExplorerFilterText()
+          ? 'NAssistant: No Explorer search results.'
+          : 'NAssistant: Explorer has no visible items.');
       }
 
       return rows;
@@ -1580,24 +2639,14 @@ export function createSettingsHtml(state: NAssistantState): string {
       }
 
       if (!treeChildrenByUri.has(uri)) {
-        rows.push({
-          key: 'loading:' + uri,
-          kind: 'loading',
-          parentUri: uri,
-          depth: depth + 1
-        });
+        queueExplorerStatus('NAssistant: Loading Explorer items...');
         return;
       }
 
       const childUris = getVisibleExplorerChildUris(uri);
 
       if (childUris.length === 0) {
-        rows.push({
-          key: 'empty:' + uri,
-          kind: 'empty',
-          parentUri: uri,
-          depth: depth + 1
-        });
+        queueExplorerStatus('NAssistant: Folder has no visible items.');
         return;
       }
 
@@ -1725,6 +2774,179 @@ export function createSettingsHtml(state: NAssistantState): string {
       return String(value || '').trim().toLowerCase();
     }
 
+    function normalizeHexColorInput(value) {
+      const color = String(value || '').trim();
+
+      if (/^#[0-9a-f]{3}$/i.test(color)) {
+        return '#' + color.slice(1).split('').map((part) => part + part).join('').toUpperCase();
+      }
+
+      return /^#[0-9a-f]{6}$/i.test(color) ? color.toUpperCase() : undefined;
+    }
+
+    function getIconColorClass(color) {
+      const preset = getColorPresets().find((item) => item.id === color);
+
+      return preset?.className || 'iconColorMuted';
+    }
+
+    function getColorLabel(color) {
+      const preset = getColorPresets().find((item) => item.id === color);
+
+      return preset?.label || 'Muted';
+    }
+
+    function getIconPresets() {
+      return state.explorer?.appearance?.iconPresets || [];
+    }
+
+    function getFileIconPresetIds() {
+      return [
+        'ts',
+        'tsx',
+        'js',
+        'jsx',
+        'json',
+        'md',
+        'cs',
+        'css',
+        'html',
+        'yaml',
+        'xml',
+        'py',
+        'shell',
+        'text',
+        'image',
+        'archive',
+        'database',
+        'lock',
+        'file'
+      ];
+    }
+
+    function getFolderIconPresets() {
+      const fileIconIds = new Set(getFileIconPresetIds());
+
+      return getIconPresets()
+        .filter((preset) => !fileIconIds.has(preset.id));
+    }
+
+    function getFileIconPresets() {
+      const fileIconIds = new Set(getFileIconPresetIds());
+
+      return getIconPresets()
+        .filter((preset) => fileIconIds.has(preset.id));
+    }
+
+    function getColorPresets() {
+      return state.explorer?.appearance?.colorPresets || [];
+    }
+
+    function showFolderIconPicker(uri) {
+      const node = findVisibleNode(uri);
+
+      if (!node?.canCustomizeIcon) {
+        hideFolderIconPicker();
+        return;
+      }
+
+      activeFolderIconUri = uri;
+      hideContextMenu();
+      hideExplorerOptions();
+      folderIconPicker.innerHTML = renderFolderIconPicker(node);
+      folderIconPicker.hidden = false;
+      positionFolderIconPicker();
+    }
+
+    function renderFolderIconPicker(node) {
+      const currentIcon = node.icon?.icon || 'folder';
+      const currentColor = node.icon?.color || 'blue';
+      const iconButtons = getFolderIconPresets()
+        .map((preset) => renderIconChoice(preset, currentIcon, currentColor))
+        .join('');
+      const colorButtons = getColorPresets()
+        .map((preset) => renderColorChoice(preset, currentIcon, currentColor))
+        .join('');
+
+      return '<div class="pickerLabel">Icon</div>' +
+        '<div class="iconGrid">' + iconButtons + '</div>' +
+        '<div class="pickerLabel">Color</div>' +
+        '<div class="colorGrid">' + colorButtons + '</div>';
+    }
+
+    function renderIconChoice(preset, currentIcon, currentColor) {
+      const selectedCss = preset.id === currentIcon ? ' isSelected' : '';
+
+      return '<button class="iconChoice ' + escapeHtml(getIconColorClass(currentColor)) + selectedCss + '" type="button" data-action="set-folder-icon" data-icon="' + escapeHtml(preset.id) + '" data-color="' + escapeHtml(currentColor) + '" title="' + escapeHtml(preset.label) + '">' +
+        escapeHtml(preset.text) +
+      '</button>';
+    }
+
+    function renderColorChoice(preset, currentIcon, currentColor) {
+      const selectedCss = preset.id === currentColor ? ' isSelected' : '';
+
+      return '<button class="colorChoice ' + escapeHtml(getIconColorClass(preset.id)) + selectedCss + '" type="button" data-action="set-folder-icon" data-icon="' + escapeHtml(currentIcon) + '" data-color="' + escapeHtml(preset.id) + '" title="' + escapeHtml(preset.label) + '"></button>';
+    }
+
+    function positionFolderIconPicker() {
+      if (!activeFolderIconUri) {
+        return;
+      }
+
+      const iconButton = Array.from(explorerTree.querySelectorAll('[data-action="open-folder-icon-picker"]'))
+        .find((element) => element.dataset.uri === activeFolderIconUri);
+
+      if (!(iconButton instanceof HTMLElement)) {
+        hideFolderIconPicker();
+        return;
+      }
+
+      const buttonRect = iconButton.getBoundingClientRect();
+
+      folderIconPicker.style.left = '0px';
+      folderIconPicker.style.top = '0px';
+
+      const panelWidth = folderIconPicker.offsetWidth;
+      const panelHeight = folderIconPicker.offsetHeight;
+      const left = Math.max(4, Math.min(
+        buttonRect.left,
+        window.innerWidth - panelWidth - 4
+      ));
+      const top = Math.max(4, Math.min(
+        buttonRect.bottom + 4,
+        window.innerHeight - panelHeight - 4
+      ));
+
+      folderIconPicker.style.left = left + 'px';
+      folderIconPicker.style.top = top + 'px';
+    }
+
+    function hideFolderIconPicker() {
+      const wasOpen = !folderIconPicker.hidden;
+
+      folderIconPicker.hidden = true;
+      folderIconPicker.innerHTML = '';
+      activeFolderIconUri = undefined;
+
+      return wasOpen;
+    }
+
+    function setLocalFolderIcon(uri, icon, color) {
+      const node = findNodeByUri(uri);
+      const iconPreset = getIconPresets().find((preset) => preset.id === icon);
+
+      if (!node || !iconPreset) {
+        return;
+      }
+
+      node.icon = {
+        icon,
+        color,
+        text: iconPreset.text,
+        label: iconPreset.label
+      };
+    }
+
     function renderVisibleRowsDiff() {
       const nextRows = buildVisibleRows();
       const nextKeys = new Set(nextRows.map((row) => row.key));
@@ -1796,23 +3018,15 @@ export function createSettingsHtml(state: NAssistantState): string {
     }
 
     function renderVisibleRow(row) {
-      if (row.kind === 'loading') {
-        return renderLoadingExplorerRow(row.depth, row.key);
-      }
-
-      if (row.kind === 'empty') {
-        return renderEmptyExplorerRow(row.depth, row.key);
-      }
-
-      if (row.kind === 'message') {
-        return renderMessageExplorerRow(row.message, row.key);
-      }
-
       if (row.kind === 'inline-create') {
         return renderInlineCreateInput(row.depth);
       }
 
-      return renderExplorerNode(row.node, row.depth);
+      if (row.kind === 'node') {
+        return renderExplorerNode(row.node, row.depth);
+      }
+
+      return '';
     }
 
     function getVisibleRowSignature(row) {
@@ -1828,6 +3042,9 @@ export function createSettingsHtml(state: NAssistantState): string {
         node.uri,
         node.name,
         node.type,
+        node.icon?.icon || '',
+        node.icon?.color || '',
+        node.icon?.text || '',
         String(getEffectiveExpanded(node)),
         String(node.isHiddenByNAssistant),
         String(node.canHide),
@@ -1849,9 +3066,10 @@ export function createSettingsHtml(state: NAssistantState): string {
 
     function renderExplorerNodes(nodes, depth) {
       if (!nodes || nodes.length === 0) {
-        return depth === 0
-          ? '<div class="emptyState">No items.</div>'
-          : renderEmptyExplorerRow(depth);
+        postExplorerStatus(depth === 0
+          ? 'NAssistant: Explorer has no visible items.'
+          : 'NAssistant: Folder has no visible items.');
+        return '';
       }
 
       return nodes.map((node) => renderExplorerNode(node, depth)).join('');
@@ -1878,7 +3096,7 @@ export function createSettingsHtml(state: NAssistantState): string {
       const mainCss = isRenaming ? 'nodeMain renameMain' : 'nodeMain';
       const main = '<div class="' + mainCss + '" title="' + escapeHtml((node.relativePath || node.name) + (node.gitTooltip && !isRenaming ? ' - ' + node.gitTooltip : '')) + '">' +
           renderDisclosureControl(node, disclosure) +
-          '<span class="nodeIcon ' + escapeHtml(node.type) + '" aria-hidden="true"></span>' +
+          renderNodeIcon(node, isRenaming) +
           label +
         '</div>';
 
@@ -1899,11 +3117,39 @@ export function createSettingsHtml(state: NAssistantState): string {
       return '<button class="disclosure disclosureButton" type="button" data-row-control="true" data-action="toggle-node" data-uri="' + escapeHtml(node.uri) + '" data-expanded="' + String(Boolean(isExpanded)) + '" title="' + label + '" aria-label="' + label + '">' + disclosure + '</button>';
     }
 
+    function renderNodeIcon(node, isRenaming) {
+      if (node.type === 'folder') {
+        const icon = node.icon;
+        const content = !isRenaming && icon && icon.icon !== 'folder'
+          ? '<span class="nodeIcon fileTypeIcon ' + escapeHtml(getIconColorClass(icon.color)) + '" title="' + escapeHtml(icon.label || '') + '">' +
+              '<span class="nodeIconText">' + escapeHtml(icon.text || '') + '</span>' +
+            '</span>'
+          : '<span class="nodeIcon folder" aria-hidden="true"></span>';
+
+        if (isRenaming || !node.canCustomizeIcon) {
+          return content;
+        }
+
+        return '<button class="nodeIconButton" type="button" data-row-control="true" data-action="open-folder-icon-picker" data-uri="' + escapeHtml(node.uri) + '" title="Customize folder icon" aria-label="Customize folder icon">' +
+          content +
+        '</button>';
+      }
+
+      if (isRenaming || !node.icon || node.icon.icon === 'file') {
+        return '<span class="nodeIcon ' + escapeHtml(node.type) + '" aria-hidden="true"></span>';
+      }
+
+      return '<span class="nodeIcon fileTypeIcon ' + escapeHtml(getIconColorClass(node.icon.color)) + '" title="' + escapeHtml(node.icon.label || '') + '">' +
+        '<span class="nodeIconText">' + escapeHtml(node.icon.text || '') + '</span>' +
+      '</span>';
+    }
+
     function renderExplorerChildren(node, depth) {
       const childUris = treeChildrenByUri.get(node.uri);
 
       if (!childUris) {
-        return renderLoadingExplorerRow(depth, 'loading:' + node.uri);
+        postExplorerStatus('NAssistant: Loading Explorer items...');
+        return '';
       }
 
       const inlineCreate = inlineEdit?.mode === 'create' && inlineEdit.parentUri === node.uri
@@ -1915,36 +3161,6 @@ export function createSettingsHtml(state: NAssistantState): string {
         .filter(Boolean);
 
       return inlineCreate + renderExplorerNodes(children, depth);
-    }
-
-    function renderLoadingExplorerRow(depth, rowKey = '') {
-      const safeDepth = Math.min(depth, 12);
-
-      return '<div class="treeRow isLoading depth' + safeDepth + '" role="presentation" data-row-key="' + escapeHtml(rowKey) + '" data-depth="' + String(depth) + '">' +
-        '<div class="nodeMain">' +
-          '<span class="disclosure disclosurePlaceholder" aria-hidden="true"></span>' +
-          '<span class="nodeIcon file" aria-hidden="true"></span>' +
-          '<span class="nodeLabel">Loading...</span>' +
-        '</div>' +
-        '<div class="rowActions" aria-hidden="true"></div>' +
-      '</div>';
-    }
-
-    function renderEmptyExplorerRow(depth, rowKey = '') {
-      const safeDepth = Math.min(depth, 12);
-
-      return '<div class="treeRow isLoading depth' + safeDepth + '" role="presentation" data-row-key="' + escapeHtml(rowKey) + '" data-depth="' + String(depth) + '">' +
-        '<div class="nodeMain">' +
-          '<span class="disclosure disclosurePlaceholder" aria-hidden="true"></span>' +
-          '<span class="nodeIcon file" aria-hidden="true"></span>' +
-          '<span class="nodeLabel">No items.</span>' +
-        '</div>' +
-        '<div class="rowActions" aria-hidden="true"></div>' +
-      '</div>';
-    }
-
-    function renderMessageExplorerRow(message, rowKey = '') {
-      return '<div class="emptyState" role="presentation" data-row-key="' + escapeHtml(rowKey) + '">' + escapeHtml(message) + '</div>';
     }
 
     function renderNodeActions(node) {
@@ -2763,6 +3979,20 @@ export function createSettingsHtml(state: NAssistantState): string {
       const settings = state.settings;
       const assistantTarget = settings.assistantTarget || getFallbackAssistantTarget();
       const enabledCount = settings.features.filter((feature) => feature.enabled).length;
+      const settingsSection = getSettingsSection(activeSettingsSection);
+
+      activeSettingsSection = settingsSection;
+
+      settingsSectionButtons.forEach((button) => {
+        const isActive = button.dataset.settingsSection === settingsSection;
+
+        button.classList.toggle('isActive', isActive);
+        button.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      });
+
+      settingsPanes.forEach((pane) => {
+        pane.hidden = pane.dataset.settingsPane !== settingsSection;
+      });
 
       featureCount.textContent = enabledCount + '/' + settings.features.length;
 
@@ -2796,6 +4026,194 @@ export function createSettingsHtml(state: NAssistantState): string {
           '</div>' +
         '</article>';
       }).join('');
+
+      explorerSettings.innerHTML = renderExplorerSettings();
+      renderColorPalette(settings.explorerAppearance);
+      renderFileRules(settings.explorerAppearance);
+    }
+
+    function getSettingsSection(value) {
+      return ['features', 'explorer', 'fileRules'].includes(value) ? value : 'features';
+    }
+
+    function renderExplorerSettings() {
+      const options = state.explorer?.options || getFallbackExplorerOptions();
+      const checked = options.showHiddenFolders ? ' checked' : '';
+
+      return '<label class="settingRow">' +
+          '<span class="settingCopy">' +
+            '<span class="settingTitle">Show hidden folders</span>' +
+            '<span class="settingDescription">Show folders hidden from the NAssistant Explorer.</span>' +
+          '</span>' +
+          '<span class="settingControl">' +
+            '<input class="optionCheck" type="checkbox" data-action="toggle-explorer-show-hidden"' + checked + ' aria-label="Show hidden folders">' +
+            '<span class="switchTrack" aria-hidden="true"></span>' +
+          '</span>' +
+        '</label>' +
+        '<div class="settingRow">' +
+          '<span class="settingCopy">' +
+            '<span class="settingTitle">Sort order</span>' +
+            '<span class="settingDescription">Choose the item order used in this Explorer view.</span>' +
+          '</span>' +
+          '<span class="settingControl settingControlWide">' +
+            renderSettingsSortDropdown() +
+          '</span>' +
+        '</div>';
+    }
+
+    function renderSettingsSortDropdown() {
+      const currentValue = getExplorerSortMode();
+      const currentLabel = getExplorerSortLabel(currentValue);
+      const openCss = settingsSortMenuOpen ? ' isOpen' : '';
+      const hidden = settingsSortMenuOpen ? '' : ' hidden';
+
+      return '<span class="settingsDropdown" data-settings-sort-menu="true">' +
+        '<button class="settingsDropdownButton' + openCss + '" type="button" data-action="toggle-settings-sort-menu" aria-haspopup="listbox" aria-expanded="' + String(settingsSortMenuOpen) + '">' +
+          '<span>' + escapeHtml(currentLabel) + '</span>' +
+          '<span class="settingsDropdownChevron" aria-hidden="true">v</span>' +
+        '</button>' +
+        '<div class="settingsDropdownMenu" role="listbox"' + hidden + '>' +
+          getExplorerSortOptions().map(([value, label]) => {
+            const selected = value === currentValue ? ' isSelected' : '';
+
+            return '<button class="' + selected.trim() + '" type="button" role="option" aria-selected="' + String(value === currentValue) + '" data-action="select-settings-sort" data-sort-mode="' + escapeHtml(value) + '">' +
+              escapeHtml(label) +
+            '</button>';
+          }).join('') +
+        '</div>' +
+      '</span>';
+    }
+
+    function getExplorerSortOptions() {
+      return [
+        ['default', 'Default'],
+        ['nameAsc', 'Name A-Z'],
+        ['nameDesc', 'Name Z-A'],
+        ['type', 'Type']
+      ];
+    }
+
+    function getExplorerSortLabel(value) {
+      return getExplorerSortOptions().find(([optionValue]) => optionValue === value)?.[1] || 'Default';
+    }
+
+    function renderColorPalette(appearance) {
+      const colors = appearance?.colorPresets || [];
+
+      colorPalette.innerHTML = '<div class="paletteHeader">' +
+          '<span class="paletteTitle">Color Palette</span>' +
+          '<span class="count">' + String(colors.length) + '</span>' +
+        '</div>' +
+        '<div class="paletteGrid">' +
+          colors.map((color) => renderPaletteColor(color)).join('') +
+        '</div>' +
+        '<div class="paletteAdd">' +
+          '<input class="paletteInput" id="newExplorerColorInput" placeholder="#7E5BEF" aria-label="New Explorer color">' +
+          '<button class="fileRuleAddButton" type="button" data-action="add-explorer-color">Add</button>' +
+        '</div>';
+    }
+
+    function renderPaletteColor(color) {
+      const css = color.isDefault ? 'paletteColor isDefault ' : 'paletteColor ';
+      const removeButton = color.canRemove
+        ? '<button type="button" data-action="remove-explorer-color" data-color="' + escapeHtml(color.id) + '" title="Remove ' + escapeHtml(color.label) + '" aria-label="Remove ' + escapeHtml(color.label) + '">x</button>'
+        : '';
+
+      return '<span class="' + css + escapeHtml(color.className) + '" title="' + escapeHtml(color.label) + '">' +
+        removeButton +
+      '</span>';
+    }
+
+    function renderFileRules(appearance) {
+      const rules = appearance?.fileExtensionRules || [];
+
+      fileRuleCount.textContent = String(rules.length);
+      fileRules.innerHTML = '<div class="fileRuleHeader" aria-hidden="true">' +
+          '<span>Ext</span>' +
+          '<span>Icon</span>' +
+          '<span>Color</span>' +
+          '<span>Hide</span>' +
+          '<span></span>' +
+        '</div>' +
+        rules.map((rule) => renderFileRuleRow(rule)).join('') +
+        renderFileRuleAddRow();
+    }
+
+    function renderFileRuleRow(rule) {
+      const checked = rule.hidden ? ' checked' : '';
+      const removeButton = rule.isDefault
+        ? '<span aria-hidden="true"></span>'
+        : '<button class="fileRuleRemove" type="button" data-action="remove-file-extension-rule" data-extension="' + escapeHtml(rule.extension) + '" title="Remove" aria-label="Remove ' + escapeHtml(rule.extension) + '">x</button>';
+
+      return '<div class="fileRuleRow" data-extension="' + escapeHtml(rule.extension) + '">' +
+        '<span class="fileRuleExtension">' + escapeHtml(rule.extension) + '</span>' +
+        '<span class="fileRuleControls">' +
+          renderFileRuleIconPicker(rule) +
+          renderFileRuleColorPicker(rule) +
+        '</span>' +
+        '<label class="fileRuleHidden" title="Hide in Explorer">' +
+          '<input type="checkbox" data-action="toggle-file-rule-hidden" data-extension="' + escapeHtml(rule.extension) + '"' + checked + ' aria-label="Hide ' + escapeHtml(rule.extension) + '">' +
+        '</label>' +
+        removeButton +
+      '</div>';
+    }
+
+    function renderFileRuleIconPicker(rule) {
+      const isOpen = activeFileRuleIconExtension === rule.extension;
+      const openCss = isOpen ? ' isOpen' : '';
+      const hidden = isOpen ? '' : ' hidden';
+      const iconPreset = getFileIconPresets().find((preset) => preset.id === rule.icon) || getFileIconPresets()[getFileIconPresets().length - 1];
+      const label = iconPreset?.id === 'file' ? 'File' : iconPreset?.text || 'File';
+
+      return '<span class="fileRuleIconPicker" data-file-rule-icon-menu="true">' +
+        '<button class="fileRuleIconButton' + openCss + '" type="button" data-action="toggle-file-rule-icon-menu" data-extension="' + escapeHtml(rule.extension) + '" aria-haspopup="listbox" aria-expanded="' + String(isOpen) + '">' +
+          '<span class="fileRuleIconMark" aria-hidden="true">' + escapeHtml(label) + '</span>' +
+          '<span class="fileRuleIconLabel">' + escapeHtml(label) + '</span>' +
+          '<span class="fileRuleIconChevron" aria-hidden="true">v</span>' +
+        '</button>' +
+        '<div class="fileRuleIconMenu" role="listbox"' + hidden + '>' +
+          getFileIconPresets().map((preset) => renderFileRuleIconChoice(rule, preset)).join('') +
+        '</div>' +
+      '</span>';
+    }
+
+    function renderFileRuleIconChoice(rule, preset) {
+      const selectedCss = preset.id === rule.icon ? ' isSelected' : '';
+      const label = preset.id === 'file' ? 'File' : preset.text;
+
+      return '<button class="fileRuleIconChoice' + selectedCss + '" type="button" role="option" aria-selected="' + String(preset.id === rule.icon) + '" data-action="select-file-rule-icon" data-extension="' + escapeHtml(rule.extension) + '" data-icon="' + escapeHtml(preset.id) + '" data-color="' + escapeHtml(rule.color) + '" title="' + escapeHtml(preset.label) + '" aria-label="' + escapeHtml(preset.label) + '">' +
+        escapeHtml(label) +
+      '</button>';
+    }
+
+    function renderFileRuleColorPicker(rule) {
+      const isOpen = activeFileRuleColorExtension === rule.extension;
+      const openCss = isOpen ? ' isOpen' : '';
+      const hidden = isOpen ? '' : ' hidden';
+
+      return '<span class="fileRuleColorPicker" data-file-rule-color-menu="true">' +
+        '<button class="fileRuleColorButton' + openCss + '" type="button" data-action="toggle-file-rule-color-menu" data-extension="' + escapeHtml(rule.extension) + '" aria-haspopup="listbox" aria-expanded="' + String(isOpen) + '">' +
+          '<span class="colorSwatch ' + escapeHtml(getIconColorClass(rule.color)) + '" aria-hidden="true"></span>' +
+          '<span class="fileRuleColorLabel">' + escapeHtml(getColorLabel(rule.color)) + '</span>' +
+          '<span class="fileRuleColorChevron" aria-hidden="true">v</span>' +
+        '</button>' +
+        '<div class="fileRuleColorMenu" role="listbox"' + hidden + '>' +
+          getColorPresets().map((color) => renderFileRuleColorChoice(rule, color)).join('') +
+        '</div>' +
+      '</span>';
+    }
+
+    function renderFileRuleColorChoice(rule, color) {
+      const selectedCss = color.id === rule.color ? ' isSelected' : '';
+
+      return '<button class="fileRuleColorChoice ' + escapeHtml(color.className) + selectedCss + '" type="button" role="option" aria-selected="' + String(color.id === rule.color) + '" data-action="select-file-rule-color" data-extension="' + escapeHtml(rule.extension) + '" data-icon="' + escapeHtml(rule.icon) + '" data-color="' + escapeHtml(color.id) + '" title="' + escapeHtml(color.label) + '" aria-label="' + escapeHtml(color.label) + '"></button>';
+    }
+
+    function renderFileRuleAddRow() {
+      return '<div class="fileRuleAdd">' +
+        '<input class="fileRuleInput" id="newFileExtensionInput" placeholder=".ext" aria-label="New file extension">' +
+        '<button class="fileRuleAddButton" type="button" data-action="add-file-extension-rule">Add</button>' +
+      '</div>';
     }
 
     function renderAssistantTargetSelector(assistantTarget) {
@@ -2856,4 +4274,16 @@ function createNonce(): string {
   }
 
   return nonce;
+}
+
+function createCustomColorStyles(state: NAssistantState): string {
+  const presets = state.explorer?.appearance?.colorPresets ?? state.settings.explorerAppearance.colorPresets;
+
+  return presets
+    .filter((preset) => preset.className.startsWith('iconColorCustom') && /^#[0-9A-F]{6}$/.test(preset.value))
+    .map((preset) => `    .${preset.className} {
+      --node-icon-color: ${preset.value};
+      --choice-color: ${preset.value};
+    }`)
+    .join('\n\n');
 }

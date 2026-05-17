@@ -174,6 +174,83 @@
           "default": "default",
           "description": "Sort order used by the NAssistant Activity Bar Explorer."
         },
+        "nassistant.explorer.folderIcons": {
+          "type": "array",
+          "scope": "resource",
+          "default": [],
+          "description": "Folder icons customized in the NAssistant Activity Bar Explorer.",
+          "items": {
+            "type": "object",
+            "required": [
+              "path",
+              "icon",
+              "color"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "path": {
+                "type": "string",
+                "description": "Workspace-relative folder path. Use an empty string for the workspace root."
+              },
+              "icon": {
+                "type": "string",
+                "description": "NAssistant icon preset id."
+              },
+              "color": {
+                "type": "string",
+                "description": "NAssistant icon color preset id or HEX color."
+              }
+            }
+          }
+        },
+        "nassistant.explorer.fileExtensionIcons": {
+          "type": "array",
+          "scope": "resource",
+          "default": [],
+          "description": "File extension icon rules used by the NAssistant Activity Bar Explorer.",
+          "items": {
+            "type": "object",
+            "required": [
+              "extension",
+              "icon",
+              "color"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "extension": {
+                "type": "string",
+                "description": "File extension, such as .ts or .json."
+              },
+              "icon": {
+                "type": "string",
+                "description": "NAssistant icon preset id."
+              },
+              "color": {
+                "type": "string",
+                "description": "NAssistant icon color preset id or HEX color."
+              }
+            }
+          }
+        },
+        "nassistant.explorer.colorPalette": {
+          "type": "array",
+          "scope": "resource",
+          "default": [],
+          "description": "Custom HEX colors available in the NAssistant Activity Bar Explorer.",
+          "items": {
+            "type": "string",
+            "pattern": "^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$"
+          }
+        },
+        "nassistant.explorer.hiddenFileExtensions": {
+          "type": "array",
+          "scope": "resource",
+          "default": [],
+          "description": "File extensions hidden only in the NAssistant Activity Bar Explorer.",
+          "items": {
+            "type": "string"
+          }
+        },
         "nassistant.hiddenExplorerFolders": {
           "type": "array",
           "scope": "resource",

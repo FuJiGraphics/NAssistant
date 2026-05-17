@@ -13,6 +13,13 @@ import {
 } from './folderVisibility';
 import type { ExplorerGitStatus, WorkspaceGitStatus } from './gitStatus';
 import { CONFIG_SECTION } from './constants';
+import {
+  type ExplorerAppearanceState,
+  type ExplorerNodeIcon,
+  createExplorerAppearanceResolver,
+  getExplorerAppearanceState,
+  getFolderNodeIcon
+} from './explorerAppearance';
 
 const EXPLORER_SHOW_HIDDEN_FOLDERS_SETTING = 'explorer.showHiddenFolders';
 const EXPLORER_SORT_MODE_SETTING = 'explorer.sortMode';
@@ -31,6 +38,7 @@ export interface ExplorerState {
   hiddenFolderCount: number;
   expandMode: 'singleClick' | 'doubleClick';
   options: ExplorerOptions;
+  appearance: ExplorerAppearanceState;
 }
 
 export interface ExplorerNode {
@@ -39,9 +47,11 @@ export interface ExplorerNode {
   relativePath: string;
   workspaceFolderUri: string;
   type: 'file' | 'folder';
+  icon: ExplorerNodeIcon;
   isExpanded: boolean;
   isHiddenByNAssistant: boolean;
   canHide: boolean;
+  canCustomizeIcon: boolean;
   canCreateChild: boolean;
   canRename: boolean;
   canDelete: boolean;
@@ -55,7 +65,8 @@ export interface ExplorerNode {
 export function createExplorerState(
   expandedUris: ReadonlySet<string>,
   childrenByParentUri: ReadonlyMap<string, ExplorerNode[]>,
-  gitStatuses: ReadonlyMap<string, WorkspaceGitStatus> = new Map()
+  gitStatuses: ReadonlyMap<string, WorkspaceGitStatus> = new Map(),
+  appearance: ExplorerAppearanceState = getExplorerAppearanceState()
 ): ExplorerState {
   const workspaceFolders = workspace.workspaceFolders ?? [];
   const children: Record<string, ExplorerNode[]> = {};
@@ -78,7 +89,8 @@ export function createExplorerState(
     workspaceFolderCount: workspaceFolders.length,
     hiddenFolderCount: getHiddenFolderCount(workspaceFolders),
     expandMode: getTreeExpandMode(),
-    options: getExplorerOptions()
+    options: getExplorerOptions(),
+    appearance
   };
 }
 
@@ -141,6 +153,7 @@ export async function readExplorerChildren(
   const excludeSettings = getEffectiveFilesExclude(workspaceFolder);
   const hiddenFolders = getHiddenExplorerFolders(workspaceFolder);
   const workspaceGitStatus = gitStatuses.get(workspaceFolder.uri.toString());
+  const appearance = createExplorerAppearanceResolver();
   const nodes: ExplorerNode[] = [];
 
   for (const [name, fileType] of entries) {
@@ -154,6 +167,10 @@ export async function readExplorerChildren(
     const relativePath = getRelativeResourcePath(workspaceFolder, resource);
 
     if (!relativePath) {
+      continue;
+    }
+
+    if (nodeType === 'file' && appearance.isHiddenFile(name)) {
       continue;
     }
 
@@ -172,9 +189,11 @@ export async function readExplorerChildren(
       relativePath,
       workspaceFolderUri: workspaceFolder.uri.toString(),
       type: nodeType,
+      icon: nodeType === 'folder' ? appearance.getFolderIcon(relativePath) : appearance.getFileIcon(name),
       isExpanded: expandedUris.has(resource.toString()),
       isHiddenByNAssistant,
       canHide: nodeType === 'folder',
+      canCustomizeIcon: nodeType === 'folder',
       canCreateChild: nodeType === 'folder',
       canRename: true,
       canDelete: true,
@@ -198,9 +217,11 @@ function createRootNode(
     relativePath: '',
     workspaceFolderUri: workspaceFolder.uri.toString(),
     type: 'folder',
+    icon: getFolderNodeIcon(''),
     isExpanded: expandedUris.has(workspaceFolder.uri.toString()),
     isHiddenByNAssistant: false,
     canHide: false,
+    canCustomizeIcon: true,
     canCreateChild: true,
     canRename: false,
     canDelete: false,

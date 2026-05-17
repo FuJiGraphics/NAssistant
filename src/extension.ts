@@ -15,7 +15,7 @@ import { COMMANDS, CONFIG_SECTION, SIDEBAR_VIEW_ID } from './constants';
 import { SettingsViewProvider } from './settingsView';
 
 export function activate(context: vscode.ExtensionContext): void {
-  const settingsViewProvider = new SettingsViewProvider();
+  const settingsViewProvider = new SettingsViewProvider(context);
 
   context.subscriptions.push(
     settingsViewProvider,

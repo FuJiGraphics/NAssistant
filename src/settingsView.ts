@@ -1,5 +1,6 @@
 import type * as vscode from 'vscode';
 import { ConfigurationTarget, env, Uri, window, workspace } from 'vscode';
+import path from 'path';
 
 import {
   ASSISTANT_TARGET_SETTING,
@@ -10,6 +11,24 @@ import {
 import type { NAssistantState, NAssistantTab } from './appState';
 import { copyFileReferenceForAi, openShortcutEditor, pasteContextToAssistant } from './commands';
 import { CONFIG_SECTION } from './constants';
+import { getRelativeResourcePath } from './folderVisibility';
+import {
+  COLOR_PALETTE_SETTING,
+  DEFAULT_COLOR_ID,
+  type FileExtensionIconRule,
+  type FolderIconRule,
+  FILE_EXTENSION_ICONS_SETTING,
+  FOLDER_ICONS_SETTING,
+  HIDDEN_FILE_EXTENSIONS_SETTING,
+  getExplorerAppearanceState,
+  getExplorerColorPalette,
+  getHiddenFileExtensions,
+  isExplorerColorId,
+  isExplorerIconId,
+  normalizeExplorerColor,
+  normalizeHexColor,
+  normalizeFileExtension
+} from './explorerAppearance';
 import {
   type ExplorerSortMode,
   type ExplorerNode,
@@ -34,12 +53,19 @@ import { type WorkspaceGitStatus, getWorkspaceGitStatuses } from './gitStatus';
 import { showStatusMessage } from './notifications';
 import { createSettingsHtml } from './settingsHtml';
 
+const EXPANDED_EXPLORER_URIS_STATE_KEY = 'nassistant.expandedExplorerUris';
+
 type NAssistantMessage =
   | {
       type: 'ready';
     }
   | {
       type: 'refresh';
+    }
+  | {
+      type: 'showStatusMessage';
+      message: string;
+      timeout: number;
     }
   | {
       type: 'setActiveTab';
@@ -113,6 +139,35 @@ type NAssistantMessage =
       sortMode: ExplorerSortMode;
     }
   | {
+      type: 'setFolderIcon';
+      uri: string;
+      icon: string;
+      color: string;
+    }
+  | {
+      type: 'setFileExtensionIcon';
+      extension: string;
+      icon: string;
+      color: string;
+    }
+  | {
+      type: 'setFileExtensionHidden';
+      extension: string;
+      hidden: boolean;
+    }
+  | {
+      type: 'removeFileExtensionRule';
+      extension: string;
+    }
+  | {
+      type: 'addExplorerColor';
+      color: string;
+    }
+  | {
+      type: 'removeExplorerColor';
+      color: string;
+    }
+  | {
       type: 'toggleFeature';
       featureId: FeatureId;
       enabled: boolean;
@@ -139,17 +194,23 @@ export class SettingsViewProvider implements vscode.WebviewViewProvider, vscode.
   private readonly expansionRequestVersions = new Map<string, number>();
   private expansionRequestSequence = 0;
   private readonly disposables: vscode.Disposable[] = [];
+  private hasSavedExpandedExplorerState = false;
   private refreshTimer?: NodeJS.Timeout;
 
-  constructor() {
+  constructor(private readonly context: vscode.ExtensionContext) {
     const watcher = workspace.createFileSystemWatcher('**/*');
+
+    this.restoreExpandedExplorerUris();
 
     this.disposables.push(
       watcher,
       watcher.onDidCreate(() => this.scheduleRefresh()),
       watcher.onDidChange(() => this.scheduleRefresh()),
       watcher.onDidDelete(() => this.scheduleRefresh()),
-      workspace.onDidChangeWorkspaceFolders(() => this.scheduleRefresh())
+      workspace.onDidChangeWorkspaceFolders(() => {
+        this.ensureDefaultExpandedRoots();
+        this.scheduleRefresh();
+      })
     );
   }
 
@@ -193,6 +254,10 @@ export class SettingsViewProvider implements vscode.WebviewViewProvider, vscode.
         this.postState();
         return;
 
+      case 'showStatusMessage':
+        showStatusMessage(message.message, message.timeout);
+        return;
+
       case 'setActiveTab':
         this.activeTab = message.tab;
         this.postState();
@@ -223,7 +288,7 @@ export class SettingsViewProvider implements vscode.WebviewViewProvider, vscode.
         return;
 
       case 'createExplorerItem':
-        this.rememberExplorerExpansions(message.expandedUris);
+        await this.rememberExplorerExpansions(message.expandedUris);
         await this.createExplorerItem(message.parentUri, message.name, message.kind);
         return;
 
@@ -248,7 +313,6 @@ export class SettingsViewProvider implements vscode.WebviewViewProvider, vscode.
         return;
 
       case 'refreshExplorer':
-        this.expandedExplorerUris.clear();
         this.explorerChildrenByParentUri.clear();
         this.expansionRequestVersions.clear();
         await this.refreshExplorerData();
@@ -260,6 +324,30 @@ export class SettingsViewProvider implements vscode.WebviewViewProvider, vscode.
 
       case 'setExplorerSortMode':
         await this.updateExplorerSortMode(message.sortMode);
+        return;
+
+      case 'setFolderIcon':
+        await this.updateFolderIcon(message.uri, message.icon, message.color);
+        return;
+
+      case 'setFileExtensionIcon':
+        await this.updateFileExtensionIcon(message.extension, message.icon, message.color);
+        return;
+
+      case 'setFileExtensionHidden':
+        await this.updateFileExtensionHidden(message.extension, message.hidden);
+        return;
+
+      case 'removeFileExtensionRule':
+        await this.removeFileExtensionRule(message.extension);
+        return;
+
+      case 'addExplorerColor':
+        await this.addExplorerColor(message.color);
+        return;
+
+      case 'removeExplorerColor':
+        await this.removeExplorerColor(message.color);
         return;
 
       case 'toggleFeature':
@@ -306,7 +394,7 @@ export class SettingsViewProvider implements vscode.WebviewViewProvider, vscode.
     await workspace
       .getConfiguration(CONFIG_SECTION)
       .update(getExplorerShowHiddenFoldersSetting(), showHiddenFolders, ConfigurationTarget.Global);
-    this.postState();
+    await this.refreshExplorerData();
   }
 
   private async updateExplorerSortMode(sortMode: ExplorerSortMode): Promise<void> {
@@ -316,11 +404,142 @@ export class SettingsViewProvider implements vscode.WebviewViewProvider, vscode.
     this.postState();
   }
 
+  private async updateFolderIcon(uri: string, icon: string, color: string): Promise<void> {
+    const resource = Uri.parse(uri);
+    const workspaceFolder = workspace.getWorkspaceFolder(resource);
+
+    if (!workspaceFolder) {
+      return;
+    }
+
+    const relativePath = getRelativeResourcePath(workspaceFolder, resource) ?? '';
+    const rules = workspace
+      .getConfiguration(CONFIG_SECTION)
+      .get<FolderIconRule[]>(FOLDER_ICONS_SETTING, []);
+    const nextRules = upsertByKey(rules, 'path', {
+      path: relativePath,
+      icon,
+      color: normalizeExplorerColor(color)
+    });
+
+    await workspace
+      .getConfiguration(CONFIG_SECTION)
+      .update(FOLDER_ICONS_SETTING, nextRules, ConfigurationTarget.Workspace);
+    await this.refreshExplorerData();
+  }
+
+  private async updateFileExtensionIcon(extension: string, icon: string, color: string): Promise<void> {
+    const normalizedExtension = normalizeFileExtension(extension);
+
+    if (!normalizedExtension) {
+      return;
+    }
+
+    const rules = workspace
+      .getConfiguration(CONFIG_SECTION)
+      .get<FileExtensionIconRule[]>(FILE_EXTENSION_ICONS_SETTING, []);
+    const nextRules = upsertByKey(rules, 'extension', {
+      extension: normalizedExtension,
+      icon,
+      color: normalizeExplorerColor(color)
+    });
+
+    await workspace
+      .getConfiguration(CONFIG_SECTION)
+      .update(FILE_EXTENSION_ICONS_SETTING, nextRules, ConfigurationTarget.Workspace);
+    await this.refreshExplorerData();
+  }
+
+  private async updateFileExtensionHidden(extension: string, hidden: boolean): Promise<void> {
+    const normalizedExtension = normalizeFileExtension(extension);
+
+    if (!normalizedExtension) {
+      return;
+    }
+
+    const hiddenExtensions = getHiddenFileExtensions();
+    const nextHiddenExtensions = hidden
+      ? [...new Set([...hiddenExtensions, normalizedExtension])]
+      : hiddenExtensions.filter((value) => value !== normalizedExtension);
+
+    await workspace
+      .getConfiguration(CONFIG_SECTION)
+      .update(HIDDEN_FILE_EXTENSIONS_SETTING, nextHiddenExtensions, ConfigurationTarget.Workspace);
+    await this.refreshExplorerData();
+  }
+
+  private async removeFileExtensionRule(extension: string): Promise<void> {
+    const normalizedExtension = normalizeFileExtension(extension);
+
+    if (!normalizedExtension) {
+      return;
+    }
+
+    const rules = workspace
+      .getConfiguration(CONFIG_SECTION)
+      .get<FileExtensionIconRule[]>(FILE_EXTENSION_ICONS_SETTING, []);
+    const hiddenExtensions = getHiddenFileExtensions();
+    const configuration = workspace.getConfiguration(CONFIG_SECTION);
+
+    await Promise.all([
+      configuration.update(
+        FILE_EXTENSION_ICONS_SETTING,
+        rules.filter((rule) => normalizeFileExtension(rule.extension) !== normalizedExtension),
+        ConfigurationTarget.Workspace
+      ),
+      configuration.update(
+        HIDDEN_FILE_EXTENSIONS_SETTING,
+        hiddenExtensions.filter((value) => value !== normalizedExtension),
+        ConfigurationTarget.Workspace
+      )
+    ]);
+    await this.refreshExplorerData();
+  }
+
+  private async addExplorerColor(color: string): Promise<void> {
+    const normalizedColor = normalizeHexColor(color);
+
+    if (!normalizedColor) {
+      showStatusMessage('NAssistant: Enter a HEX color like #7E5BEF.', 2500);
+      return;
+    }
+
+    const nextPalette = [...new Set([...getExplorerColorPalette(), normalizedColor])];
+
+    await workspace
+      .getConfiguration(CONFIG_SECTION)
+      .update(COLOR_PALETTE_SETTING, nextPalette, ConfigurationTarget.Workspace);
+    await this.refreshExplorerData();
+    showStatusMessage(`NAssistant: Added ${normalizedColor} to Explorer colors.`, 2000);
+  }
+
+  private async removeExplorerColor(color: string): Promise<void> {
+    const normalizedColor = normalizeHexColor(color);
+
+    if (!normalizedColor) {
+      return;
+    }
+
+    const configuration = workspace.getConfiguration(CONFIG_SECTION);
+    const nextPalette = getExplorerColorPalette().filter((value) => value !== normalizedColor);
+    const folderRules = configuration.get<FolderIconRule[]>(FOLDER_ICONS_SETTING, []);
+    const fileRules = configuration.get<FileExtensionIconRule[]>(FILE_EXTENSION_ICONS_SETTING, []);
+
+    await Promise.all([
+      configuration.update(COLOR_PALETTE_SETTING, nextPalette, ConfigurationTarget.Workspace),
+      configuration.update(FOLDER_ICONS_SETTING, resetRuleColor(folderRules, normalizedColor), ConfigurationTarget.Workspace),
+      configuration.update(FILE_EXTENSION_ICONS_SETTING, resetRuleColor(fileRules, normalizedColor), ConfigurationTarget.Workspace)
+    ]);
+    await this.refreshExplorerData();
+    showStatusMessage(`NAssistant: Removed ${normalizedColor} from Explorer colors.`, 2000);
+  }
+
   private async updateExplorerExpansion(uri: string, expanded: boolean): Promise<void> {
     const requestVersion = this.nextExplorerExpansionVersion(uri);
 
     if (!expanded) {
       this.expandedExplorerUris.delete(uri);
+      await this.saveExpandedExplorerUris();
       this.postState();
       return;
     }
@@ -328,6 +547,7 @@ export class SettingsViewProvider implements vscode.WebviewViewProvider, vscode.
     const resource = Uri.parse(uri);
 
     this.expandedExplorerUris.add(uri);
+    await this.saveExpandedExplorerUris();
     this.postState();
 
     const children = await readExplorerChildren(resource, this.expandedExplorerUris, this.gitStatuses);
@@ -383,21 +603,25 @@ export class SettingsViewProvider implements vscode.WebviewViewProvider, vscode.
 
     if (createdUri) {
       this.expandedExplorerUris.add(parentUri);
+      await this.saveExpandedExplorerUris();
       await this.refreshExplorerData();
     }
   }
 
-  private rememberExplorerExpansions(expandedUris?: readonly string[]): void {
+  private async rememberExplorerExpansions(expandedUris?: readonly string[]): Promise<void> {
     for (const uri of expandedUris ?? []) {
       this.expandedExplorerUris.add(uri);
     }
+
+    await this.saveExpandedExplorerUris();
   }
 
   private async renameExplorerItem(uri: string, name: string): Promise<void> {
     const renamedUri = await renameExplorerItem(Uri.parse(uri), name);
 
     if (renamedUri) {
-      this.replaceExpandedUri(uri, renamedUri.toString());
+      this.replaceExpandedUriTree(uri, renamedUri.toString());
+      await this.saveExpandedExplorerUris();
       await this.refreshExplorerData();
     }
   }
@@ -407,21 +631,30 @@ export class SettingsViewProvider implements vscode.WebviewViewProvider, vscode.
 
     if (deleted) {
       for (const uri of uris) {
-        this.expandedExplorerUris.delete(uri);
-        this.explorerChildrenByParentUri.delete(uri);
+        this.deleteExpandedUriTree(uri);
       }
 
+      await this.saveExpandedExplorerUris();
       await this.refreshExplorerData();
     }
   }
 
   private async moveExplorerItems(uris: readonly string[], targetUri: string): Promise<void> {
+    const targetFolder = Uri.parse(targetUri);
     const moved = await moveExplorerItems(
       uris.map((uri) => Uri.parse(uri)),
-      Uri.parse(targetUri)
+      targetFolder
     );
 
     if (moved) {
+      for (const uri of uris) {
+        const resource = Uri.parse(uri);
+        const nextUri = Uri.joinPath(targetFolder, path.basename(resource.fsPath));
+
+        this.replaceExpandedUriTree(uri, nextUri.toString());
+      }
+
+      await this.saveExpandedExplorerUris();
       await this.refreshExplorerData();
     }
   }
@@ -438,22 +671,27 @@ export class SettingsViewProvider implements vscode.WebviewViewProvider, vscode.
   }
 
   private async refreshExplorerData(): Promise<void> {
+    this.ensureDefaultExpandedRoots();
     await this.refreshGitStatuses();
     await this.refreshLoadedExplorerChildren();
     this.postState();
   }
 
   private async refreshLoadedExplorerChildren(): Promise<void> {
-    const nextChildren = new Map<string, ExplorerNode[]>();
+    const parentUris = [...new Set([
+      ...this.explorerChildrenByParentUri.keys(),
+      ...this.expandedExplorerUris
+    ])];
 
-    for (const parentUri of this.explorerChildrenByParentUri.keys()) {
-      nextChildren.set(
-        parentUri,
-        await readExplorerChildren(Uri.parse(parentUri), this.expandedExplorerUris, this.gitStatuses)
-      );
-    }
+    const childrenLists = await Promise.all(
+      parentUris.map((parentUri) =>
+        readExplorerChildren(Uri.parse(parentUri), this.expandedExplorerUris, this.gitStatuses)
+      )
+    );
 
-    this.explorerChildrenByParentUri = nextChildren;
+    this.explorerChildrenByParentUri = new Map(
+      parentUris.map((parentUri, index) => [parentUri, childrenLists[index]])
+    );
   }
 
   private async refreshGitStatuses(): Promise<void> {
@@ -470,9 +708,82 @@ export class SettingsViewProvider implements vscode.WebviewViewProvider, vscode.
     }, 250);
   }
 
-  private replaceExpandedUri(previousUri: string, nextUri: string): void {
-    if (this.expandedExplorerUris.delete(previousUri)) {
-      this.expandedExplorerUris.add(nextUri);
+  private restoreExpandedExplorerUris(): void {
+    const storedUris = this.context.workspaceState.get<string[]>(EXPANDED_EXPLORER_URIS_STATE_KEY);
+
+    if (storedUris) {
+      this.hasSavedExpandedExplorerState = true;
+
+      for (const uri of storedUris) {
+        this.expandedExplorerUris.add(uri);
+      }
+
+      return;
+    }
+
+    this.ensureDefaultExpandedRoots();
+  }
+
+  private ensureDefaultExpandedRoots(): void {
+    if (this.hasSavedExpandedExplorerState) {
+      return;
+    }
+
+    const workspaceRootUris = (workspace.workspaceFolders ?? [])
+      .map((workspaceFolder) => workspaceFolder.uri.toString());
+
+    if (
+      workspaceRootUris.length === 0 ||
+      workspaceRootUris.some((uri) => this.expandedExplorerUris.has(uri))
+    ) {
+      return;
+    }
+
+    for (const uri of workspaceRootUris) {
+      this.expandedExplorerUris.add(uri);
+    }
+  }
+
+  private async saveExpandedExplorerUris(): Promise<void> {
+    this.hasSavedExpandedExplorerState = true;
+
+    await this.context.workspaceState.update(
+      EXPANDED_EXPLORER_URIS_STATE_KEY,
+      [...this.expandedExplorerUris]
+    );
+  }
+
+  private replaceExpandedUriTree(previousUri: string, nextUri: string): void {
+    const expandedUris = [...this.expandedExplorerUris];
+
+    for (const expandedUri of expandedUris) {
+      if (expandedUri === previousUri || expandedUri.startsWith(`${previousUri}/`)) {
+        this.expandedExplorerUris.delete(expandedUri);
+        this.expandedExplorerUris.add(`${nextUri}${expandedUri.slice(previousUri.length)}`);
+      }
+    }
+
+    const childrenEntries = [...this.explorerChildrenByParentUri.entries()];
+
+    for (const [parentUri, children] of childrenEntries) {
+      if (parentUri === previousUri || parentUri.startsWith(`${previousUri}/`)) {
+        this.explorerChildrenByParentUri.delete(parentUri);
+        this.explorerChildrenByParentUri.set(`${nextUri}${parentUri.slice(previousUri.length)}`, children);
+      }
+    }
+  }
+
+  private deleteExpandedUriTree(uri: string): void {
+    for (const expandedUri of [...this.expandedExplorerUris]) {
+      if (expandedUri === uri || expandedUri.startsWith(`${uri}/`)) {
+        this.expandedExplorerUris.delete(expandedUri);
+      }
+    }
+
+    for (const parentUri of [...this.explorerChildrenByParentUri.keys()]) {
+      if (parentUri === uri || parentUri.startsWith(`${uri}/`)) {
+        this.explorerChildrenByParentUri.delete(parentUri);
+      }
     }
   }
 
@@ -497,14 +808,17 @@ export class SettingsViewProvider implements vscode.WebviewViewProvider, vscode.
   }
 
   private getState(): NAssistantState {
+    const appearance = getExplorerAppearanceState();
+
     return {
       activeTab: this.activeTab,
       explorer: createExplorerState(
         this.expandedExplorerUris,
         this.explorerChildrenByParentUri,
-        this.gitStatuses
+        this.gitStatuses,
+        appearance
       ),
-      settings: getSettingsState()
+      settings: getSettingsState(appearance)
     };
   }
 
@@ -530,11 +844,51 @@ function isNAssistantMessage(message: unknown): message is NAssistantMessage {
     case 'refreshExplorer':
       return true;
 
+    case 'showStatusMessage':
+      return (
+        typeof candidate.message === 'string' &&
+        candidate.message.length <= 160 &&
+        typeof candidate.timeout === 'number' &&
+        candidate.timeout >= 500 &&
+        candidate.timeout <= 5000
+      );
+
     case 'setExplorerShowHiddenFolders':
       return typeof candidate.showHiddenFolders === 'boolean';
 
     case 'setExplorerSortMode':
       return isExplorerSortMode(candidate.sortMode);
+
+    case 'setFolderIcon':
+      return (
+        typeof candidate.uri === 'string' &&
+        isExplorerIconId(candidate.icon) &&
+        isExplorerColorId(candidate.color)
+      );
+
+    case 'setFileExtensionIcon':
+      return (
+        typeof candidate.extension === 'string' &&
+        Boolean(normalizeFileExtension(candidate.extension)) &&
+        isExplorerIconId(candidate.icon) &&
+        isExplorerColorId(candidate.color)
+      );
+
+    case 'setFileExtensionHidden':
+      return (
+        typeof candidate.extension === 'string' &&
+        Boolean(normalizeFileExtension(candidate.extension)) &&
+        typeof candidate.hidden === 'boolean'
+      );
+
+    case 'removeFileExtensionRule':
+      return typeof candidate.extension === 'string' && Boolean(normalizeFileExtension(candidate.extension));
+
+    case 'addExplorerColor':
+      return typeof candidate.color === 'string' && candidate.color.length <= 16;
+
+    case 'removeExplorerColor':
+      return typeof candidate.color === 'string' && Boolean(normalizeHexColor(candidate.color));
 
     case 'setActiveTab':
       return isNAssistantTab(candidate.tab);
@@ -617,4 +971,27 @@ function isExternalDroppedFile(value: unknown): value is ExternalDroppedFile {
 
 function isOptionalStringArray(value: unknown): value is string[] | undefined {
   return value === undefined || (Array.isArray(value) && value.every((item) => typeof item === 'string'));
+}
+
+function upsertByKey<T extends Record<K, string>, K extends keyof T>(
+  items: readonly T[],
+  key: K,
+  nextItem: T
+): T[] {
+  const nextItems = items.filter((item) => item[key] !== nextItem[key]);
+
+  return [...nextItems, nextItem];
+}
+
+function resetRuleColor<T extends { color: string }>(rules: readonly T[], removedColor: string): T[] {
+  return rules.map((rule) => {
+    if (normalizeHexColor(rule.color) !== removedColor) {
+      return rule;
+    }
+
+    return {
+      ...rule,
+      color: DEFAULT_COLOR_ID
+    };
+  });
 }
